@@ -9,6 +9,7 @@ import {
     LibraryDetailRoute,
     LibraryListRoute,
     LoginRoute,
+    NotesRoute,
     ReaderRoute,
     RecapRoute,
     SettingsRoute,
@@ -85,6 +86,10 @@ export function AppRoutes({
                     <Route
                         path={routePathPattern('calendar')}
                         element={<CalendarRoute />}
+                    />
+                    <Route
+                        path={routePathPattern('notes')}
+                        element={<NotesRoute />}
                     />
                     <Route
                         path={routePathPattern('settings')}

@@ -440,6 +440,11 @@ toast-delete-annotation-error = Anmerkung konnte nicht gelöscht werden
 # -----------------------------------
 #            Page Activity
 # -----------------------------------
+all-notes = Notizen
+notes-search-placeholder = Markierungen, Notizen, Bücher suchen...
+notes-empty = Keine Anmerkungen gefunden
+notes-empty-hint = Markierungen und Notizen, die du in KOReader hinzufügst, erscheinen hier.
+
 page-activity = Seitenaktivität
     .select-reading = Lesevorgang auswählen
     .page = Seite { $page }

@@ -128,6 +128,44 @@ pub struct LibraryAnnotation {
     pub drawer: Option<String>,
 }
 
+// ── All-annotations (cross-item) ──────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub struct AllAnnotationsEntry {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub chapter: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub datetime: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub datetime_updated: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pageno: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub note: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pos0: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pos1: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub color: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub drawer: Option<String>,
+    pub item_id: String,
+    pub item_title: String,
+    #[sqlx(rename = "item_authors")]
+    pub item_authors: sqlx::types::Json<Vec<String>>,
+    pub item_cover_url: String,
+    pub item_content_type: LibraryContentType,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AllAnnotationsData {
+    pub annotations: Vec<AllAnnotationsEntry>,
+}
+
 // ── Response wrappers ─────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -440,6 +440,17 @@ toast-delete-annotation-error = Failed to delete annotation
 # -----------------------------------
 #            Page Activity
 # -----------------------------------
+# -----------------------------------
+#          All Notes Page
+# -----------------------------------
+all-notes = Notes
+notes-search-placeholder = Search highlights, notes, books...
+notes-empty = No annotations found
+notes-empty-hint = Highlights and notes you add in KoReader will appear here.
+
+# -----------------------------------
+#            Page Activity
+# -----------------------------------
 page-activity = Page Activity
     .select-reading = Select reading
     .page = Page { $page }

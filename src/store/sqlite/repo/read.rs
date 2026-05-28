@@ -64,6 +64,27 @@ impl LibraryRepository {
             .context("Failed to get library item")
     }
 
+    /// Load all annotations across all items, joined with item metadata.
+    pub async fn get_all_annotations(
+        &self,
+    ) -> Result<Vec<crate::server::api::responses::library::AllAnnotationsEntry>> {
+        sqlx::query_as::<_, crate::server::api::responses::library::AllAnnotationsEntry>(
+            "SELECT
+                a.id, a.chapter, a.datetime, a.datetime_updated, a.pageno,
+                a.text, a.note, a.pos0, a.pos1, a.color, a.drawer,
+                a.item_id, i.title AS item_title,
+                i.authors_json AS item_authors,
+                i.cover_url AS item_cover_url,
+                i.content_type AS item_content_type
+             FROM library_annotations a
+             JOIN library_items i ON i.id = a.item_id
+             ORDER BY a.datetime DESC, a.id ASC",
+        )
+        .fetch_all(&self.pool)
+        .await
+        .context("Failed to get all annotations")
+    }
+
     /// Load annotations for an item, optionally filtered by kind.
     ///
     /// `kind` should be `"highlight"` or `"bookmark"`, or `None` for both.

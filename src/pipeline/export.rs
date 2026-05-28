@@ -149,6 +149,9 @@ pub async fn export_data_files(
     // items/page-activity/{id}.json — per-item page-level reading heatmap data
     export_page_activity(data_dir, library_repo, reading_data, items).await?;
 
+    // annotations.json — all annotations across all items
+    export_all_annotations(data_dir, library_repo).await?;
+
     info!(
         "Exported {} library items ({} detail files)",
         items.len(),
@@ -270,6 +273,24 @@ async fn export_page_activity(
     cleanup_stale_json(&page_activity_dir, &exported_ids, &[])?;
 
     info!("Exported page activity for {} items", exported_ids.len());
+    Ok(())
+}
+
+// ── All annotations export ─────────────────────────────────────────────
+
+async fn export_all_annotations(
+    data_dir: &Path,
+    library_repo: &LibraryRepository,
+) -> Result<()> {
+    use crate::server::api::responses::library::AllAnnotationsData;
+
+    let annotations = library_repo.get_all_annotations().await?;
+    let count = annotations.len();
+    write_json(
+        &data_dir.join("annotations.json"),
+        &AllAnnotationsData { annotations },
+    )?;
+    info!("Exported {} annotations", count);
     Ok(())
 }
 
@@ -775,6 +796,7 @@ mod tests {
     const EXPORTED: &[&str] = &[
         "/api/site",
         "/api/items",
+        "/api/annotations",
         "/api/items/{id}",
         "/api/items/{id}/page-activity",
         "/api/reading/summary",
@@ -786,7 +808,7 @@ mod tests {
 
     /// API routes that intentionally have no static export equivalent.
     const NON_EXPORTED: &[&str] = &[
-        "/api/events/stream", // SSE — live-only, not exportable
+        "/api/events/stream",   // SSE — live-only, not exportable
     ];
 
     /// Verifies every API route is accounted for in either `EXPORTED` or

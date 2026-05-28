@@ -8,6 +8,7 @@ import type {
 import { normalizeScope } from './api-client';
 import { fetchJson } from './api-fetch';
 import type {
+    AllAnnotationsData,
     ApiResponse,
     PageActivityData,
     LibraryDetailData,
@@ -91,6 +92,13 @@ export class HttpApiClient implements ApiClient {
         await fetchJson('/api/auth/logout', {
             method: 'POST',
         });
+    }
+
+    async getAllAnnotations(): Promise<AllAnnotationsData> {
+        const response = (await fetchJson(
+            '/api/annotations',
+        )) as ApiResponse<AllAnnotationsData>;
+        return response.data;
     }
 
     async getItems(scope?: ScopeValue): Promise<LibraryListData> {

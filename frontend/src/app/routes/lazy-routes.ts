@@ -58,6 +58,11 @@ const importReaderRoute = async () => {
     return { default: module.ReaderRoute };
 };
 
+const importNotesRoute = async () => {
+    const module = await import('../../features/notes/routes/NotesRoute');
+    return { default: module.NotesRoute };
+};
+
 const importRecapRoute = async () => {
     const module = await import('../../features/recap/routes/RecapRoute');
     return { default: module.RecapRoute };
@@ -76,6 +81,7 @@ export const LibraryDetailRoute = lazyWithPreload<{
 export const ReaderRoute = lazyWithPreload<{
     collection: LibraryCollectionRoute;
 }>(importReaderRoute);
+export const NotesRoute = lazyWithPreload(importNotesRoute);
 export const RecapRoute = lazyWithPreload(importRecapRoute);
 
 const preloadedRoutePromises = new Map<RouteId, Promise<void>>();
@@ -84,6 +90,7 @@ const PRELOADERS_BY_ROUTE: Record<RouteId, Array<() => Promise<void>>> = {
     login: [LoginRoute.preload],
     statistics: [StatisticsRoute.preload],
     calendar: [CalendarRoute.preload],
+    notes: [NotesRoute.preload],
     settings: [SettingsRoute.preload],
     'books-list': [LibraryListRoute.preload],
     'books-detail': [LibraryDetailRoute.preload],

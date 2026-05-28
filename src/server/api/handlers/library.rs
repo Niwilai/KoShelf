@@ -39,6 +39,23 @@ fn now_in_tz(tz: Option<&chrono_tz::Tz>, fmt: &str) -> String {
     }
 }
 
+pub(crate) async fn all_annotations(
+    State(state): State<ServerState>,
+) -> ApiResult<impl IntoResponse> {
+    let annotations = state
+        .library_repo
+        .get_all_annotations()
+        .await
+        .map_err(|e| {
+            warn!("Failed to list all annotations: {}", e);
+            ApiResponseError::internal_server_error()
+        })?;
+
+    Ok(Json(ApiResponse::new(
+        crate::server::api::responses::library::AllAnnotationsData { annotations },
+    )))
+}
+
 pub(crate) async fn items(
     State(state): State<ServerState>,
     Query(query): Query<ScopeQuery>,

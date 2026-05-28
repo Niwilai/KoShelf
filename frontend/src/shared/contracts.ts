@@ -325,6 +325,31 @@ export interface LibraryDetailData {
     chapters?: ChapterEntry[] | null;
 }
 
+// ── All annotations (cross-item) ─────────────────────────────────────
+
+export interface AllAnnotationsEntry {
+    id: string;
+    chapter?: string | null;
+    datetime?: string | null;
+    datetime_updated?: string | null;
+    pageno?: number | null;
+    text?: string | null;
+    note?: string | null;
+    pos0?: string | null;
+    pos1?: string | null;
+    color?: string | null;
+    drawer?: string | null;
+    item_id: string;
+    item_title: string;
+    item_authors: string[];
+    item_cover_url: string;
+    item_content_type: LibraryContentType;
+}
+
+export interface AllAnnotationsData {
+    annotations: AllAnnotationsEntry[];
+}
+
 export interface ChapterEntry {
     title: string;
     position: number;

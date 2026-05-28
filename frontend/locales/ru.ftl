@@ -472,6 +472,11 @@ toast-delete-annotation-error = Не удалось удалить аннота�
 # -----------------------------------
 #            Page Activity
 # -----------------------------------
+all-notes = Заметки
+notes-search-placeholder = Поиск выделений, заметок, книг...
+notes-empty = Аннотации не найдены
+notes-empty-hint = Выделения и заметки, добавленные в KOReader, появятся здесь.
+
 page-activity = Активность по страницам
     .select-reading = Выбрать прочтение
     .page = Страница { $page }

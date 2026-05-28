@@ -416,6 +416,11 @@ toast-delete-annotation-error = A jegyzet törlése sikertelen
 # -----------------------------------
 #            Page Activity
 # -----------------------------------
+all-notes = Jegyzetek
+notes-search-placeholder = Kiemelések, jegyzetek, könyvek keresése...
+notes-empty = Nem találhatók megjegyzések
+notes-empty-hint = A KOReaderben hozzáadott kiemelések és jegyzetek itt jelennek meg.
+
 page-activity = Oldalaktivitás
     .select-reading = Olvasás kiválasztása
     .page = { $page }. oldal

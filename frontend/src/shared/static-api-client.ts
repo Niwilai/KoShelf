@@ -8,6 +8,7 @@ import type {
 import { normalizeScope } from './api-client';
 import { fetchJson } from './api-fetch';
 import type {
+    AllAnnotationsData,
     PageActivityData,
     ExportPageActivityData,
     ExportReadingPeriods,
@@ -112,6 +113,10 @@ export class StaticApiClient implements ApiClient {
 
     async logout(): Promise<void> {
         throw authUnavailableError();
+    }
+
+    async getAllAnnotations(): Promise<AllAnnotationsData> {
+        return (await fetchJson('/data/annotations.json')) as AllAnnotationsData;
     }
 
     async getItems(scope?: ScopeValue): Promise<LibraryListData> {
