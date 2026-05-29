@@ -344,6 +344,8 @@ export interface AllAnnotationsEntry {
     item_authors: string[];
     item_cover_url: string;
     item_content_type: LibraryContentType;
+    item_format: string;
+    item_kind_index: number;
 }
 
 export interface AllAnnotationsData {

@@ -159,6 +159,8 @@ pub struct AllAnnotationsEntry {
     pub item_authors: sqlx::types::Json<Vec<String>>,
     pub item_cover_url: String,
     pub item_content_type: LibraryContentType,
+    pub item_format: String,
+    pub item_kind_index: i32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

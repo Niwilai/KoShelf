@@ -75,7 +75,12 @@ impl LibraryRepository {
                 a.item_id, i.title AS item_title,
                 i.authors_json AS item_authors,
                 i.cover_url AS item_cover_url,
-                i.content_type AS item_content_type
+                i.content_type AS item_content_type,
+                i.format AS item_format,
+                (ROW_NUMBER() OVER (
+                    PARTITION BY a.item_id, a.annotation_kind
+                    ORDER BY a.lua_index ASC
+                ) - 1) AS item_kind_index
              FROM library_annotations a
              JOIN library_items i ON i.id = a.item_id
              ORDER BY a.datetime DESC, a.id ASC",

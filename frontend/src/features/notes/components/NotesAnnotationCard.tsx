@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import {
+    LuBookOpen,
     LuClock3,
     LuFileText,
     LuHash,
@@ -14,12 +15,15 @@ import {
     DRAWER_ICONS,
 } from '../../library/lib/highlight-constants';
 import { buildRoutePath } from '../../../app/routes/route-registry';
+import { isReaderFormatSupported } from '../../reader/lib/reader-format-support';
+import { annotationReaderHref } from '../../library/lib/library-reader-links';
 
 type NotesAnnotationCardProps = {
     annotation: AllAnnotationsEntry;
+    hasFiles?: boolean;
 };
 
-export function NotesAnnotationCard({ annotation }: NotesAnnotationCardProps) {
+export function NotesAnnotationCard({ annotation, hasFiles }: NotesAnnotationCardProps) {
     const isHighlight = annotation.drawer != null;
     const hasText = annotation.text != null;
     const hasNote = annotation.note != null;
@@ -38,6 +42,22 @@ export function NotesAnnotationCard({ annotation }: NotesAnnotationCardProps) {
     const detailHref = buildRoutePath(detailRoute as 'books-detail', {
         id: annotation.item_id,
     });
+
+    const readerRouteId =
+        annotation.item_content_type === 'comic'
+            ? 'comics-read'
+            : 'books-read';
+    const readerBaseHref =
+        hasFiles && isReaderFormatSupported(annotation.item_format)
+            ? buildRoutePath(readerRouteId as 'books-read', {
+                  id: annotation.item_id,
+              })
+            : null;
+    const readerHref = annotationReaderHref(
+        readerBaseHref,
+        isHighlight ? 'highlight' : 'bookmark',
+        annotation.item_kind_index,
+    );
 
     return (
         <article className="bg-white dark:bg-dark-850/50 border border-gray-200/70 dark:border-dark-700/70 rounded-lg overflow-hidden shadow-xs">
@@ -95,12 +115,30 @@ export function NotesAnnotationCard({ annotation }: NotesAnnotationCardProps) {
                         </span>
                     )}
                 </div>
-                {formattedDate && (
-                    <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-gray-200/50 dark:bg-dark-700/50 text-gray-500 dark:text-dark-400 shrink-0">
-                        <LuClock3 className="w-3.5 h-3.5" aria-hidden="true" />
-                        {formattedDate}
-                    </span>
-                )}
+                <div className="flex items-center gap-2 shrink-0">
+                    {formattedDate && (
+                        <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-gray-200/50 dark:bg-dark-700/50 text-gray-500 dark:text-dark-400">
+                            <LuClock3 className="w-3.5 h-3.5" aria-hidden="true" />
+                            {formattedDate}
+                        </span>
+                    )}
+                    {readerHref && (
+                        <Link
+                            to={readerHref}
+                            title={translation.get('open-at-annotation')}
+                            aria-label={translation.get('open-at-annotation')}
+                            className="inline-flex items-center justify-center gap-1.5 w-8 h-8 sm:w-auto sm:h-auto px-0 sm:px-2.5 py-1 rounded-md text-xs font-medium text-primary-600 dark:text-primary-300 bg-primary-500/10 hover:bg-primary-500/20 border border-primary-500/20 hover:border-primary-500/30 transition-colors"
+                        >
+                            <LuBookOpen
+                                className="w-3.5 h-3.5"
+                                aria-hidden="true"
+                            />
+                            <span className="hidden sm:inline">
+                                {translation.get('open-in-reader')}
+                            </span>
+                        </Link>
+                    )}
+                </div>
             </div>
 
             {/* Content body */}

@@ -183,6 +183,7 @@ export function NotesRoute() {
                                         <NotesAnnotationCard
                                             key={annotation.id}
                                             annotation={annotation}
+                                            hasFiles={siteQuery.data?.capabilities.has_files}
                                         />
                                     ))}
                                 </div>
