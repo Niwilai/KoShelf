@@ -12,6 +12,7 @@ pub struct FileConfig {
     pub server: Option<ServerSection>,
     pub output: Option<OutputSection>,
     pub statistics: Option<StatisticsSection>,
+    pub sync: Option<SyncSection>,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -60,6 +61,12 @@ pub struct StatisticsSection {
     pub min_time_per_day: Option<String>,
     pub include_all_stats: Option<bool>,
     pub ignore_stable_page_metadata: Option<bool>,
+}
+
+#[derive(Deserialize, Default, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct SyncSection {
+    pub command: Option<String>,
 }
 
 impl FileConfig {

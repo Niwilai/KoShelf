@@ -13,6 +13,10 @@ pub(crate) async fn export(args: ExportArgs) -> Result<()> {
         super::exit_validation_error("export", e);
     }
 
+    if let Some(ref cmd) = args.common.sync_command {
+        crate::app::bootstrap::run_sync_command(cmd)?;
+    }
+
     let output_dir = args
         .output
         .clone()

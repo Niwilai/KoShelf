@@ -21,6 +21,10 @@ pub(crate) async fn serve(args: ServeArgs) -> Result<()> {
         super::exit_validation_error("serve", e);
     }
 
+    if let Some(ref cmd) = args.common.sync_command {
+        crate::app::bootstrap::run_sync_command(cmd)?;
+    }
+
     let output_dir = args
         .common
         .data_path

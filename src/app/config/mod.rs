@@ -101,6 +101,15 @@ fn merge_common_with_file_config(
         }
     }
 
+    // ── sync section ─────────────────────────────────────────────
+    if let Some(ref sync) = config.sync {
+        if let Some(ref cmd) = sync.command
+            && not_explicit(matches, "sync_command")
+        {
+            common.sync_command = Some(cmd.clone());
+        }
+    }
+
     // ── statistics section ───────────────────────────────────────
     if let Some(ref stats) = config.statistics {
         if let Some(ref v) = stats.heatmap_scale_max

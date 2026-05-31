@@ -145,6 +145,12 @@ pub struct CommonArgs {
         default_value = "false"
     )]
     pub ignore_stable_page_metadata: bool,
+
+    // ── Pre-run sync ─────────────────────────────────────────────
+    /// Shell command to run before processing (e.g. rsync to pull latest books).
+    /// Runs via `sh -c` and must exit 0 or KoShelf will abort.
+    #[arg(long, env = "KOSHELF_SYNC_COMMAND")]
+    pub sync_command: Option<String>,
 }
 
 /// Arguments for the `serve` subcommand.

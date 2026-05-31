@@ -11,10 +11,31 @@ use crate::store::lifecycle::{
 use crate::store::memory::ReadingData;
 use crate::store::sqlite::repo::LibraryRepository;
 use crate::store::sqlite::{open_library_pool, run_library_migrations};
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use log::info;
 use std::collections::HashSet;
 use std::path::PathBuf;
+use std::process::Command;
+
+/// Run the configured pre-sync command (e.g. rsync) via `sh -c`.
+pub(crate) fn run_sync_command(command: &str) -> Result<()> {
+    info!("Running sync command: {}", command);
+    let status = Command::new("sh")
+        .arg("-c")
+        .arg(command)
+        .status()
+        .with_context(|| format!("Failed to launch sync command: {}", command))?;
+
+    if !status.success() {
+        bail!(
+            "Sync command exited with {}: {}",
+            status.code().map_or("signal".to_string(), |c| c.to_string()),
+            command
+        );
+    }
+    info!("Sync command completed successfully.");
+    Ok(())
+}
 
 fn metadata_location(common: &CommonArgs) -> MetadataLocation {
     if let Some(ref docsettings_path) = common.docsettings_path {
