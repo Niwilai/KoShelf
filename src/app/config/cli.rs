@@ -147,7 +147,12 @@ pub struct CommonArgs {
     pub ignore_stable_page_metadata: bool,
 
     // ── Pre-run sync ─────────────────────────────────────────────
-    /// Shell command to run before processing (e.g. rsync to pull latest books).
+    /// Run the configured sync command before processing.
+    /// Requires --sync-command (or KOSHELF_SYNC_COMMAND / config file) to be set.
+    #[arg(long, env = "KOSHELF_SYNC", default_value = "false")]
+    pub sync: bool,
+
+    /// Shell command to run when --sync is passed (e.g. rsync to pull latest books).
     /// Runs via `sh -c` and must exit 0 or KoShelf will abort.
     #[arg(long, env = "KOSHELF_SYNC_COMMAND")]
     pub sync_command: Option<String>,

@@ -103,6 +103,11 @@ fn merge_common_with_file_config(
 
     // ── sync section ─────────────────────────────────────────────
     if let Some(ref sync) = config.sync {
+        if let Some(v) = sync.enabled
+            && not_explicit(matches, "sync")
+        {
+            common.sync = v;
+        }
         if let Some(ref cmd) = sync.command
             && not_explicit(matches, "sync_command")
         {

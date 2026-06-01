@@ -21,8 +21,15 @@ pub(crate) async fn serve(args: ServeArgs) -> Result<()> {
         super::exit_validation_error("serve", e);
     }
 
-    if let Some(ref cmd) = args.common.sync_command {
-        crate::app::bootstrap::run_sync_command(cmd)?;
+    if args.common.sync {
+        if let Some(ref cmd) = args.common.sync_command {
+            crate::app::bootstrap::run_sync_command(cmd)?;
+        } else {
+            anyhow::bail!(
+                "--sync requires a sync command. Set one via --sync-command, \
+                 KOSHELF_SYNC_COMMAND, or the [sync] section in your config file."
+            );
+        }
     }
 
     let output_dir = args

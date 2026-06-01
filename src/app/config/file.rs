@@ -66,6 +66,7 @@ pub struct StatisticsSection {
 #[derive(Deserialize, Default, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct SyncSection {
+    pub enabled: Option<bool>,
     pub command: Option<String>,
 }
 
