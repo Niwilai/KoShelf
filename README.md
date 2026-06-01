@@ -1,3 +1,5 @@
+> **Fork note:** This fork adds a "Notes" sidebar view that lets you search through all notes, bookmarks, and comments across your entire library in one place. Note: the rsync path to KOReader is currently hardcoded and needs to be adjusted for your setup.
+
 <div align="center">
 
 # KoShelf
