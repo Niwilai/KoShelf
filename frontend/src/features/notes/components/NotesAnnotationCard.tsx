@@ -56,7 +56,7 @@ export function NotesAnnotationCard({ annotation, hasFiles }: NotesAnnotationCar
     const readerHref = annotationReaderHref(
         readerBaseHref,
         isHighlight ? 'highlight' : 'bookmark',
-        String(annotation.item_kind_index),
+        annotation.id,
     );
 
     return (
