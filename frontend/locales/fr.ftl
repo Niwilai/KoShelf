@@ -278,6 +278,9 @@ error-state =
     .crash-report = Signaler un problème
 
 # Navigation and sorting
+library-sort =
+    .last-opened = Tri : Dernier ouvert
+    .alphabetical = Tri : A–Z
 sort-order =
     .aria-label-toggle = Inverser l’ordre de tri
     .newest-first = { sort-order.aria-label-toggle } - Actuel : Plus récents d’abord

@@ -442,7 +442,7 @@ macro_rules! list_items_query {
             "SELECT
                 id, title, authors_json, series_json, status,
                 progress_percentage, rating, annotation_count,
-                cover_url, content_type
+                cover_url, content_type, last_open_at
              FROM library_items
              WHERE (?1 IS NULL OR content_type = ?1)
              ORDER BY ",
@@ -622,6 +622,46 @@ mod tests {
 
         let bookmarks = repo.get_annotations("eee", Some("bookmark")).await.unwrap();
         assert_eq!(bookmarks.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn sync_reading_stats_populates_last_open_at_in_list() {
+        let repo = test_repo().await;
+
+        let mut a = sample_item("aaa");
+        a.title = "Old Book".to_string();
+        a.file_path = "/books/old.epub".to_string();
+        repo.upsert_item(&a).await.unwrap();
+
+        let mut b = sample_item("bbb");
+        b.title = "New Book".to_string();
+        b.file_path = "/books/new.epub".to_string();
+        repo.upsert_item(&b).await.unwrap();
+
+        // Before sync: last_open_at should be None
+        let items = repo.list_items(&LibraryListQuery::default()).await.unwrap();
+        assert!(items.iter().all(|i| i.last_open_at.is_none()));
+
+        // Sync reading stats
+        let updates = vec![
+            ("aaa".to_string(), Some("2024-01-01T00:00:00Z".to_string()), Some(100)),
+            ("bbb".to_string(), Some("2025-06-01T00:00:00Z".to_string()), Some(200)),
+        ];
+        let changed = repo.sync_reading_stats(&updates).await.unwrap();
+        assert_eq!(changed, 2);
+
+        // After sync: last_open_at should be populated
+        let items = repo.list_items(&LibraryListQuery::default()).await.unwrap();
+        let aaa = items.iter().find(|i| i.id == "aaa").unwrap();
+        let bbb = items.iter().find(|i| i.id == "bbb").unwrap();
+        assert_eq!(aaa.last_open_at.as_deref(), Some("2024-01-01T00:00:00Z"));
+        assert_eq!(bbb.last_open_at.as_deref(), Some("2025-06-01T00:00:00Z"));
+
+        // Re-upsert should NOT overwrite last_open_at (COALESCE preserves it)
+        repo.upsert_item(&a).await.unwrap();
+        let items = repo.list_items(&LibraryListQuery::default()).await.unwrap();
+        let aaa = items.iter().find(|i| i.id == "aaa").unwrap();
+        assert_eq!(aaa.last_open_at.as_deref(), Some("2024-01-01T00:00:00Z"));
     }
 
     #[tokio::test]

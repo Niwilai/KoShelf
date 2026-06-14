@@ -59,8 +59,8 @@ impl LibraryRepository {
                 hidden_flow_pages = excluded.hidden_flow_pages,
                 reader_presentation = excluded.reader_presentation,
                 chapters_json = excluded.chapters_json,
-                last_open_at = excluded.last_open_at,
-                total_reading_time_sec = excluded.total_reading_time_sec,
+                last_open_at = COALESCE(library_items.last_open_at, excluded.last_open_at),
+                total_reading_time_sec = COALESCE(library_items.total_reading_time_sec, excluded.total_reading_time_sec),
                 updated_at = excluded.updated_at",
         )
         .bind(&item.id)
@@ -99,6 +99,23 @@ impl LibraryRepository {
         .execute(&self.pool)
         .await
         .context("Failed to upsert library item")?;
+        Ok(())
+    }
+
+    /// Set `last_open_at` for an item only if the new value is more recent
+    /// than the existing one (or the existing one is NULL).
+    pub async fn set_last_open_at_if_newer(&self, item_id: &str, timestamp: &str) -> Result<()> {
+        sqlx::query(
+            "UPDATE library_items
+             SET last_open_at = ?2
+             WHERE id = ?1
+               AND (last_open_at IS NULL OR last_open_at < ?2)",
+        )
+        .bind(item_id)
+        .bind(timestamp)
+        .execute(&self.pool)
+        .await
+        .context("set last_open_at if newer")?;
         Ok(())
     }
 
@@ -143,6 +160,31 @@ impl LibraryRepository {
 
         tx.commit().await.context("commit annotations")?;
         Ok(())
+    }
+
+    /// Bulk-update `last_open_at` and `total_reading_time_sec` for items
+    /// whose values differ from the provided reading statistics.
+    pub async fn sync_reading_stats(
+        &self,
+        updates: &[(String, Option<String>, Option<i64>)],
+    ) -> Result<u64> {
+        let mut changed = 0u64;
+        for (id, last_open_at, total_reading_time_sec) in updates {
+            let result = sqlx::query(
+                "UPDATE library_items
+                 SET last_open_at = ?2, total_reading_time_sec = ?3
+                 WHERE id = ?1
+                   AND (last_open_at IS NOT ?2 OR total_reading_time_sec IS NOT ?3)",
+            )
+            .bind(id)
+            .bind(last_open_at)
+            .bind(total_reading_time_sec)
+            .execute(&self.pool)
+            .await
+            .context("sync reading stats")?;
+            changed += result.rows_affected();
+        }
+        Ok(changed)
     }
 
     pub async fn upsert_fingerprint(&self, fp: &FingerprintRow) -> Result<()> {

@@ -218,6 +218,7 @@ export interface LibraryListItem {
     annotation_count?: number;
     cover_url: string;
     content_type: LibraryContentType;
+    last_open_at?: string | null;
 }
 
 export interface ExternalIdentifier {

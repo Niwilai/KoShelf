@@ -277,6 +277,9 @@ error-state =
     .crash-report = Reportar problema
 
 # Navigation and sorting
+library-sort =
+    .last-opened = Ordem: Último aberto
+    .alphabetical = Ordem: A–Z
 sort-order =
     .aria-label-toggle = Alternar ordem
     .newest-first = { sort-order.aria-label-toggle } - Atual: Mais Recentes Primeiro

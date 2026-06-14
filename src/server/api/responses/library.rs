@@ -57,6 +57,8 @@ pub struct LibraryListItem {
     pub annotation_count: i32,
     pub cover_url: String,
     pub content_type: LibraryContentType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_open_at: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]

@@ -74,10 +74,42 @@ pub async fn load_reading_data(
             .count()
     );
 
-    Ok(Some(ReadingData {
+    let reading_data = ReadingData {
         stats_data: data,
         time_config: config.time_config.clone(),
         heatmap_scale_max: config.heatmap_scale_max,
         page_scaling,
-    }))
+    };
+
+    sync_reading_stats_to_db(repo, &reading_data).await?;
+
+    Ok(Some(reading_data))
+}
+
+/// Write `last_open_at` and `total_reading_time_sec` from in-memory
+/// statistics back into `library_items` so list queries can sort by them.
+pub async fn sync_reading_stats_to_db(
+    repo: &LibraryRepository,
+    reading_data: &ReadingData,
+) -> Result<()> {
+    let updates: Vec<(String, Option<String>, Option<i64>)> = reading_data
+        .stats_data
+        .stats_by_md5
+        .iter()
+        .map(|(md5, stat_book)| {
+            let last_open_at = stat_book
+                .last_open
+                .map(|ts| reading_data.time_config.format_timestamp_rfc3339(ts));
+            (md5.to_lowercase(), last_open_at, stat_book.total_read_time)
+        })
+        .collect();
+
+    let total = updates.len();
+    let with_last_open = updates.iter().filter(|(_, lo, _)| lo.is_some()).count();
+    let changed = repo.sync_reading_stats(&updates).await?;
+    info!(
+        "Reading stats sync: {} candidates ({} with last_open_at), {} DB rows updated",
+        total, with_last_open, changed
+    );
+    Ok(())
 }

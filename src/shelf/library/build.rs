@@ -39,6 +39,13 @@ pub async fn upsert_single_item(
         repo.upsert_fingerprint(&fp_row)
             .await
             .context("Failed to upsert fingerprint")?;
+
+        if let Some(modified_ms) = fp_row.metadata_modified_unix_ms {
+            let ts = time_config.format_timestamp_rfc3339(modified_ms / 1000);
+            repo.set_last_open_at_if_newer(&item.id, &ts)
+                .await
+                .context("Failed to update last_open_at from metadata timestamp")?;
+        }
     }
 
     Ok(())

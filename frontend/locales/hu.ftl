@@ -256,6 +256,9 @@ error-state =
     .crash-report = Hiba jelentése
 
 # Navigation and sorting
+library-sort =
+    .last-opened = Rendezés: Utoljára megnyitott
+    .alphabetical = Rendezés: A–Z
 sort-order =
     .aria-label-toggle = Rendezési sorrend megváltoztatása
     .newest-first = { sort-order.aria-label-toggle } - Jelenleg: Legújabb elöl

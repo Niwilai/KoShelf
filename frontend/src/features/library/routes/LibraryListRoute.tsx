@@ -27,11 +27,13 @@ import {
     itemMatchesSearch,
     libraryTitleTranslationKey,
     normalizeLibraryFilterValue,
+    normalizeLibrarySortOrder,
     normalizeSearchTerm,
     sectionMatchesFilter,
     type LibraryCollection,
     type LibraryFilterValue,
     type LibrarySectionKey,
+    type LibrarySortOrder,
 } from '../model/library-model';
 
 type LibraryListRouteProps = {
@@ -102,6 +104,12 @@ export function LibraryListRoute({ collection }: LibraryListRouteProps) {
             true,
         );
     });
+    const [sortOrder, setSortOrder] = useState<LibrarySortOrder>(() => {
+        const persisted = readRouteState(routeId, 'local').sortOrder;
+        return normalizeLibrarySortOrder(
+            typeof persisted === 'string' ? persisted : null,
+        );
+    });
 
     const { siteQuery } = useSiteQuery();
     const listQuery = useLibraryListQuery(collection);
@@ -114,8 +122,8 @@ export function LibraryListRoute({ collection }: LibraryListRouteProps) {
     const listData = listTransition.displayData;
 
     const sectionBuckets = useMemo(
-        () => bucketLibraryItems(listData?.items ?? []),
-        [listData?.items],
+        () => bucketLibraryItems(listData?.items ?? [], sortOrder),
+        [listData?.items, sortOrder],
     );
 
     const hasUnreadItems = sectionBuckets.unread.length > 0;
@@ -145,6 +153,13 @@ export function LibraryListRoute({ collection }: LibraryListRouteProps) {
         setFilterValue(nextFilter);
         window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     }, []);
+    const handleSortToggle = useCallback(() => {
+        setSortOrder((prev) => {
+            const next = prev === 'last-opened' ? 'alphabetical' : 'last-opened';
+            patchRouteState(routeId, 'local', { sortOrder: next });
+            return next;
+        });
+    }, [routeId]);
 
     useEffect(() => {
         patchRouteState(routeId, 'session', {
@@ -341,6 +356,8 @@ export function LibraryListRoute({ collection }: LibraryListRouteProps) {
                 filterValue={effectiveFilterValue}
                 filterOptions={filterOptions}
                 onFilterChange={handleFilterChange}
+                sortOrder={sortOrder}
+                onSortToggle={handleSortToggle}
                 mobileSearchOpen={mobileSearchOpen}
                 onOpenMobileSearch={() => setMobileSearchOpen(true)}
                 onCloseMobileSearch={() => {

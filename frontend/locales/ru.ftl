@@ -303,6 +303,9 @@ error-state =
     .crash-report = Сообщить о проблеме
 
 # Navigation and sorting
+library-sort =
+    .last-opened = Сортировка: Последнее открытие
+    .alphabetical = Сортировка: А–Я
 sort-order =
     .aria-label-toggle = Переключить порядок сортировки
     .newest-first = { sort-order.aria-label-toggle } - Текущий: Сначала новые

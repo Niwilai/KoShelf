@@ -4,7 +4,8 @@ import { LuSearch, LuX } from 'react-icons/lu';
 import { useRouteHeader } from '../../../app/shell/use-route-header';
 import { translation } from '../../../shared/i18n';
 import { Button } from '../../../shared/ui/button/Button';
-import type { LibraryFilterValue } from '../model/library-model';
+import type { LibraryFilterValue, LibrarySortOrder } from '../model/library-model';
+import { LibrarySortToggle } from './LibrarySortToggle';
 import { LibraryStatusFilter } from './LibraryStatusFilter';
 
 type LibraryHeaderProps = {
@@ -14,6 +15,8 @@ type LibraryHeaderProps = {
     filterValue: LibraryFilterValue;
     filterOptions: readonly LibraryFilterValue[];
     onFilterChange: (value: LibraryFilterValue) => void;
+    sortOrder: LibrarySortOrder;
+    onSortToggle: () => void;
     mobileSearchOpen: boolean;
     onOpenMobileSearch: () => void;
     onCloseMobileSearch: () => void;
@@ -28,6 +31,8 @@ export function LibraryHeader({
     filterValue,
     filterOptions,
     onFilterChange,
+    sortOrder,
+    onSortToggle,
     mobileSearchOpen,
     onOpenMobileSearch,
     onCloseMobileSearch,
@@ -108,8 +113,12 @@ export function LibraryHeader({
                     )}
 
                     <div
-                        className={`${mobileSearchOpen ? 'hidden sm:flex' : 'flex'} items-center`}
+                        className={`${mobileSearchOpen ? 'hidden sm:flex' : 'flex'} items-center gap-2`}
                     >
+                        <LibrarySortToggle
+                            value={sortOrder}
+                            onToggle={onSortToggle}
+                        />
                         <LibraryStatusFilter
                             value={filterValue}
                             options={filterOptions}
@@ -129,7 +138,9 @@ export function LibraryHeader({
             onFilterChange,
             onOpenMobileSearch,
             onSearchTermChange,
+            onSortToggle,
             searchTerm,
+            sortOrder,
             title,
         ],
     );
