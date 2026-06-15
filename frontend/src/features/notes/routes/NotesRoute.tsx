@@ -8,6 +8,10 @@ import { useQueryTransitionState } from '../../../shared/lib/state/useQueryTrans
 import { QueryStateLayout } from '../../../shared/ui/feedback/QueryStateLayout';
 import { PageContent } from '../../../shared/ui/layout/PageContent';
 import { PageHeader } from '../../../shared/ui/layout/PageHeader';
+import {
+    FilterDropdown,
+    type FilterDropdownOption,
+} from '../../../shared/ui/selectors/FilterDropdown';
 import { useAllAnnotationsQuery } from '../hooks/useAllAnnotationsQuery';
 import { NotesAnnotationCard } from '../components/NotesAnnotationCard';
 import type { AllAnnotationsEntry } from '../../../shared/contracts';
@@ -52,6 +56,7 @@ export function NotesRoute() {
     });
 
     const [filter, setFilter] = useState<FilterMode>('all');
+    const [selectedBookId, setSelectedBookId] = useState<string>('all');
     const [searchTerm, setSearchTerm] = useState('');
 
     useDocumentTitle(
@@ -59,11 +64,36 @@ export function NotesRoute() {
         siteQuery.data?.title,
     );
 
+    const bookOptions = useMemo<FilterDropdownOption<string>[]>(() => {
+        const annotations = transition.displayData?.annotations;
+        if (!annotations) return [{ value: 'all', label: translation.get('filter.all') }];
+
+        const seen = new Map<string, string>();
+        for (const a of annotations) {
+            if (!seen.has(a.item_id)) {
+                seen.set(a.item_id, a.item_title);
+            }
+        }
+
+        const sorted = [...seen.entries()].sort((a, b) =>
+            a[1].localeCompare(b[1]),
+        );
+
+        return [
+            { value: 'all', label: translation.get('filter.all') },
+            ...sorted.map(([id, title]) => ({ value: id, label: title })),
+        ];
+    }, [transition.displayData]);
+
     const filtered = useMemo(() => {
         const annotations = transition.displayData?.annotations;
         if (!annotations) return [];
 
         let result = annotations.filter((a) => matchesFilter(a, filter));
+
+        if (selectedBookId !== 'all') {
+            result = result.filter((a) => a.item_id === selectedBookId);
+        }
 
         if (searchTerm.trim()) {
             const lower = searchTerm.toLowerCase();
@@ -80,7 +110,7 @@ export function NotesRoute() {
         }
 
         return result;
-    }, [transition.displayData, filter, searchTerm]);
+    }, [transition.displayData, filter, selectedBookId, searchTerm]);
 
     const counts = useMemo(() => {
         const annotations = transition.displayData?.annotations ?? [];
@@ -150,6 +180,16 @@ export function NotesRoute() {
                                         );
                                     })}
                                 </div>
+
+                                <FilterDropdown
+                                    value={selectedBookId}
+                                    options={bookOptions}
+                                    onChange={setSelectedBookId}
+                                    ariaLabel={translation.get('notes-book-filter')}
+                                    panelClassName="w-max min-w-48 max-w-80 max-h-80 overflow-y-auto"
+                                    separateOptions
+                                    optionClassName="text-sm truncate"
+                                />
 
                                 <div className="flex-1">
                                     <input

@@ -448,6 +448,7 @@ toast-delete-annotation-error = Failed to delete annotation
 # -----------------------------------
 all-notes = Notes
 notes-search-placeholder = Search highlights, notes, books...
+notes-book-filter = Filter by book
 notes-empty = No annotations found
 notes-empty-hint = Highlights and notes you add in KoReader will appear here.
 

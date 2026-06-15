@@ -421,6 +421,7 @@ toast-delete-annotation-error = A jegyzet törlése sikertelen
 # -----------------------------------
 all-notes = Jegyzetek
 notes-search-placeholder = Kiemelések, jegyzetek, könyvek keresése...
+notes-book-filter = Szűrés könyv szerint
 notes-empty = Nem találhatók megjegyzések
 notes-empty-hint = A KOReaderben hozzáadott kiemelések és jegyzetek itt jelennek meg.
 
