@@ -15,6 +15,7 @@ import {
     DRAWER_ICONS,
 } from '../../library/lib/highlight-constants';
 import { buildRoutePath } from '../../../app/routes/route-registry';
+import { createDetailReturnState } from '../../../shared/lib/navigation/detail-return-state';
 import { isReaderFormatSupported } from '../../reader/lib/reader-format-support';
 import { annotationReaderHref } from '../../library/lib/library-reader-links';
 
@@ -42,6 +43,7 @@ export function NotesAnnotationCard({ annotation, hasFiles }: NotesAnnotationCar
     const detailHref = buildRoutePath(detailRoute as 'books-detail', {
         id: annotation.item_id,
     });
+    const detailReturnState = createDetailReturnState('/notes');
 
     const readerRouteId =
         annotation.item_content_type === 'comic'
@@ -64,6 +66,7 @@ export function NotesAnnotationCard({ annotation, hasFiles }: NotesAnnotationCar
             {/* Book info header */}
             <Link
                 to={detailHref}
+                state={detailReturnState}
                 className="flex items-center gap-3 px-4 py-3 bg-gray-50/80 dark:bg-dark-900/40 border-b border-gray-200/50 dark:border-dark-700/50 hover:bg-gray-100/80 dark:hover:bg-dark-800/40 transition-colors"
             >
                 <img

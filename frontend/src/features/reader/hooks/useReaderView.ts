@@ -171,7 +171,11 @@ export function useReaderView(
         (event: React.MouseEvent<HTMLAnchorElement>) => {
             event.preventDefault();
             closeReaderView();
-            navigate(backHref);
+            if (window.history.length > 1) {
+                navigate(-1);
+            } else {
+                navigate(backHref);
+            }
         },
         [backHref, closeReaderView, navigate],
     );
