@@ -19,6 +19,7 @@ type FilterDropdownProps<T extends string> = {
     options: readonly FilterDropdownOption<T>[];
     onChange: (value: T) => void;
     ariaLabel: string;
+    triggerClassName?: string;
     panelClassName?: string;
     separateOptions?: boolean;
     optionClassName?: string;
@@ -29,6 +30,7 @@ export function FilterDropdown<T extends string>({
     options,
     onChange,
     ariaLabel,
+    triggerClassName,
     panelClassName = 'w-40',
     separateOptions = false,
     optionClassName,
@@ -46,17 +48,17 @@ export function FilterDropdown<T extends string>({
                 aria-label={ariaLabel}
                 title={ariaLabel}
                 onClick={() => setOpen((current) => !current)}
-                className={`${DROPDOWN_TRIGGER_BASE_CLASSNAME} text-gray-900 dark:text-white sm:gap-2 sm:justify-start w-10 sm:w-auto sm:px-4 sm:pl-6`}
+                className={`${DROPDOWN_TRIGGER_BASE_CLASSNAME} text-gray-900 dark:text-white sm:gap-2 sm:justify-start w-10 sm:w-auto sm:px-4 sm:pl-6 ${triggerClassName ?? ''}`}
             >
                 <LuFilter
-                    className={`sm:hidden w-5 h-5 ${value === 'all' ? 'text-gray-600 dark:text-gray-300' : 'text-primary-500'}`}
+                    className={`sm:hidden w-5 h-5 shrink-0 ${value === 'all' ? 'text-gray-600 dark:text-gray-300' : 'text-primary-500'}`}
                     aria-hidden="true"
                 />
-                <span className="hidden sm:inline font-medium">
+                <span className="hidden sm:inline font-medium truncate min-w-0">
                     {activeLabel}
                 </span>
                 <LuChevronDown
-                    className="hidden sm:block w-4 h-4 text-primary-400"
+                    className="hidden sm:block w-4 h-4 text-primary-400 shrink-0"
                     aria-hidden="true"
                 />
             </button>

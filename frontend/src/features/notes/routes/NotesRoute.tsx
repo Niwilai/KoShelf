@@ -9,9 +9,9 @@ import { QueryStateLayout } from '../../../shared/ui/feedback/QueryStateLayout';
 import { PageContent } from '../../../shared/ui/layout/PageContent';
 import { PageHeader } from '../../../shared/ui/layout/PageHeader';
 import {
-    FilterDropdown,
-    type FilterDropdownOption,
-} from '../../../shared/ui/selectors/FilterDropdown';
+    SearchableMultiSelect,
+    type SelectOption,
+} from '../../../shared/ui/selectors/SearchableMultiSelect';
 import { useAllAnnotationsQuery } from '../hooks/useAllAnnotationsQuery';
 import { NotesAnnotationCard } from '../components/NotesAnnotationCard';
 import type { AllAnnotationsEntry } from '../../../shared/contracts';
@@ -56,7 +56,7 @@ export function NotesRoute() {
     });
 
     const [filter, setFilter] = useState<FilterMode>('all');
-    const [selectedBookId, setSelectedBookId] = useState<string>('all');
+    const [selectedBooks, setSelectedBooks] = useState<Set<string>>(new Set());
     const [searchTerm, setSearchTerm] = useState('');
 
     useDocumentTitle(
@@ -64,9 +64,9 @@ export function NotesRoute() {
         siteQuery.data?.title,
     );
 
-    const bookOptions = useMemo<FilterDropdownOption<string>[]>(() => {
+    const bookOptions = useMemo<SelectOption[]>(() => {
         const annotations = transition.displayData?.annotations;
-        if (!annotations) return [{ value: 'all', label: translation.get('filter.all') }];
+        if (!annotations) return [];
 
         const seen = new Map<string, string>();
         for (const a of annotations) {
@@ -75,14 +75,9 @@ export function NotesRoute() {
             }
         }
 
-        const sorted = [...seen.entries()].sort((a, b) =>
-            a[1].localeCompare(b[1]),
-        );
-
-        return [
-            { value: 'all', label: translation.get('filter.all') },
-            ...sorted.map(([id, title]) => ({ value: id, label: title })),
-        ];
+        return [...seen.entries()]
+            .sort((a, b) => a[1].localeCompare(b[1]))
+            .map(([id, title]) => ({ value: id, label: title }));
     }, [transition.displayData]);
 
     const filtered = useMemo(() => {
@@ -91,8 +86,8 @@ export function NotesRoute() {
 
         let result = annotations.filter((a) => matchesFilter(a, filter));
 
-        if (selectedBookId !== 'all') {
-            result = result.filter((a) => a.item_id === selectedBookId);
+        if (selectedBooks.size > 0) {
+            result = result.filter((a) => selectedBooks.has(a.item_id));
         }
 
         if (searchTerm.trim()) {
@@ -110,7 +105,7 @@ export function NotesRoute() {
         }
 
         return result;
-    }, [transition.displayData, filter, selectedBookId, searchTerm]);
+    }, [transition.displayData, filter, selectedBooks, searchTerm]);
 
     const counts = useMemo(() => {
         const annotations = transition.displayData?.annotations ?? [];
@@ -181,14 +176,14 @@ export function NotesRoute() {
                                     })}
                                 </div>
 
-                                <FilterDropdown
-                                    value={selectedBookId}
+                                <SearchableMultiSelect
                                     options={bookOptions}
-                                    onChange={setSelectedBookId}
+                                    selected={selectedBooks}
+                                    onChange={setSelectedBooks}
+                                    allLabel={translation.get('notes-book-filter')}
                                     ariaLabel={translation.get('notes-book-filter')}
-                                    panelClassName="w-max min-w-48 max-w-80 max-h-80 overflow-y-auto"
-                                    separateOptions
-                                    optionClassName="text-sm truncate"
+                                    searchPlaceholder={translation.get('notes-book-search-placeholder')}
+                                    triggerClassName="sm:max-w-48 md:max-w-64"
                                 />
 
                                 <div className="flex-1">

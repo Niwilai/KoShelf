@@ -446,6 +446,7 @@ toast-delete-annotation-error = Anmerkung konnte nicht gelöscht werden
 all-notes = Notizen
 notes-search-placeholder = Markierungen, Notizen, Bücher suchen...
 notes-book-filter = Nach Buch filtern
+notes-book-search-placeholder = Bücher suchen…
 notes-empty = Keine Anmerkungen gefunden
 notes-empty-hint = Markierungen und Notizen, die du in KOReader hinzufügst, erscheinen hier.
 

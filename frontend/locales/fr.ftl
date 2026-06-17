@@ -447,6 +447,7 @@ toast-delete-annotation-error = Impossible de supprimer l'annotation
 all-notes = Notes
 notes-search-placeholder = Rechercher surlignages, notes, livres...
 notes-book-filter = Filtrer par livre
+notes-book-search-placeholder = Rechercher des livres…
 notes-empty = Aucune annotation trouvée
 notes-empty-hint = Les surlignages et notes ajoutés dans KOReader apparaîtront ici.
 

@@ -478,6 +478,7 @@ toast-delete-annotation-error = Не удалось удалить аннота�
 all-notes = Заметки
 notes-search-placeholder = Поиск выделений, заметок, книг...
 notes-book-filter = Фильтр по книге
+notes-book-search-placeholder = Поиск книг…
 notes-empty = Аннотации не найдены
 notes-empty-hint = Выделения и заметки, добавленные в KOReader, появятся здесь.
 
