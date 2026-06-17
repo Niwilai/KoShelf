@@ -3,10 +3,10 @@ import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HashRouter } from 'react-router';
 
-import '@fontsource/quicksand/400.css';
-import '@fontsource/quicksand/500.css';
-import '@fontsource/quicksand/600.css';
-import '@fontsource/quicksand/700.css';
+import '@fontsource/literata/400.css';
+import '@fontsource/literata/500.css';
+import '@fontsource/literata/600.css';
+import '@fontsource/literata/700.css';
 import './styles/app.css';
 import { App } from './App';
 import { api } from './shared/api';
