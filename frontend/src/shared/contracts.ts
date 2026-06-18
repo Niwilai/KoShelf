@@ -296,6 +296,7 @@ export interface LibraryItemStats {
     highlights?: number | null;
     bookmarks?: number | null;
     pages?: number | null;
+    read_pages?: number | null;
     total_reading_time_sec?: number | null;
 }
 

@@ -262,6 +262,8 @@ export function LibraryDetailRoute({ collection }: LibraryDetailRouteProps) {
                                     itemStats={itemStats}
                                     sessionStats={sessionStats}
                                     completions={completions}
+                                    status={item?.status}
+                                    progress={item?.progress_percentage}
                                     visible={sectionState['reading-stats']}
                                     onToggle={() => toggle('reading-stats')}
                                 />

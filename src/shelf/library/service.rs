@@ -115,6 +115,7 @@ pub async fn detail(
 struct ReadingStats {
     last_open_at: Option<String>,
     pages: Option<i64>,
+    read_pages: Option<i64>,
     total_reading_time_sec: Option<i64>,
     session_stats: LibrarySessionStats,
 }
@@ -129,6 +130,7 @@ fn map_reading_stats(
             .last_open
             .map(|ts| time_config.format_timestamp_rfc3339(ts)),
         pages: stat_book.pages,
+        read_pages: stat_book.total_read_pages,
         total_reading_time_sec: stat_book.total_read_time,
         session_stats: LibrarySessionStats {
             session_count: session_stats.session_count,
@@ -152,6 +154,7 @@ fn map_detail_statistics(
             bookmarks: Some(bookmarks),
             last_open_at: reading.as_ref().and_then(|r| r.last_open_at.clone()),
             pages: reading.as_ref().and_then(|r| r.pages),
+            read_pages: reading.as_ref().and_then(|r| r.read_pages),
             total_reading_time_sec: reading.as_ref().and_then(|r| r.total_reading_time_sec),
         }),
         session_stats: reading

@@ -168,6 +168,8 @@ total-pages-read = Elolvasott oldalak száma
 pages-per-hour = Oldal/óra
 # Abbreviation for Pages Per Hour
 pph-abbreviation = old./ó.
+# Estimated time remaining to finish an in-progress book
+estimated-time-left = Hátralévő idő
 reading-sessions-label = { $count ->
    *[other] Olvasási alkalom
 }

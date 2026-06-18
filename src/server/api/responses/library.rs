@@ -208,6 +208,10 @@ pub struct LibraryItemStats {
     pub bookmarks: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pages: Option<i64>,
+    /// Distinct pages KOReader has actually logged as read (page coverage),
+    /// independent of the current reading position.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub read_pages: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub total_reading_time_sec: Option<i64>,
 }

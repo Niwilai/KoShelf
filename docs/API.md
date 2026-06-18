@@ -251,6 +251,7 @@ Each identifier:
 | `item_stats.last_open_at` | string? | ISO 8601 timestamp |
 | `item_stats.highlights` | number? | Highlight count |
 | `item_stats.pages` | number? | Page count |
+| `item_stats.read_pages` | number? | Distinct pages actually read (page coverage) |
 | `item_stats.total_reading_time_sec` | number? | Total reading time in seconds |
 | `session_stats.session_count` | number | Number of reading sessions |
 | `session_stats.average_session_duration_sec` | number? | Average session length |

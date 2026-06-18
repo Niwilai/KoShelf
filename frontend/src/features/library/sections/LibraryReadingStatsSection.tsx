@@ -1,5 +1,11 @@
 import { HiOutlineBookOpen } from 'react-icons/hi2';
-import { LuCalendarDays, LuClock3, LuInfo, LuZap } from 'react-icons/lu';
+import {
+    LuCalendarDays,
+    LuClock3,
+    LuHourglass,
+    LuInfo,
+    LuZap,
+} from 'react-icons/lu';
 
 import { translation } from '../../../shared/i18n';
 import {
@@ -18,6 +24,7 @@ import type {
 import {
     calculateAverageReadingSpeed,
     calculateCalendarLengthDays,
+    estimateTimeToFinishSeconds,
     formatCompletionDateRange,
     formatIsoDate,
     formatReadingSpeed,
@@ -27,6 +34,8 @@ type LibraryReadingStatsSectionProps = {
     itemStats: LibraryItemStats | null;
     sessionStats: LibrarySessionStats;
     completions: LibraryCompletions | null;
+    status: string | null | undefined;
+    progress: number | null | undefined;
     visible: boolean;
     onToggle: () => void;
 };
@@ -35,9 +44,24 @@ export function LibraryReadingStatsSection({
     itemStats,
     sessionStats,
     completions,
+    status,
+    progress,
     visible,
     onToggle,
 }: LibraryReadingStatsSectionProps) {
+    // Use KOReader's page basis (item_stats.pages / read_pages) so the page
+    // counts line up with the reading speed, which is derived from the same source.
+    const timeToFinishSec =
+        status === 'reading'
+            ? estimateTimeToFinishSeconds({
+                  progress,
+                  totalReadingTimeSec: itemStats?.total_reading_time_sec,
+                  readingSpeedPagesPerHour: sessionStats.reading_speed,
+                  totalPages: itemStats?.pages,
+                  pagesRead: itemStats?.read_pages,
+              })
+            : null;
+
     return (
         <CollapsibleSection
             sectionKey="reading-stats"
@@ -109,6 +133,20 @@ export function LibraryReadingStatsSection({
                     value={formatReadingSpeed(sessionStats.reading_speed)}
                     label={translation.get('pages-per-hour')}
                 />
+
+                {timeToFinishSec !== null && (
+                    <MetricCard
+                        icon={LuHourglass}
+                        iconContainerClassName="bg-teal-500/20 dark:bg-linear-to-br dark:from-teal-500 dark:to-teal-600"
+                        iconClassName="text-teal-600 dark:text-white"
+                        value={
+                            <MetricCardUnitValue
+                                value={formatDurationParts(timeToFinishSec)}
+                            />
+                        }
+                        label={translation.get('estimated-time-left')}
+                    />
+                )}
 
                 <MetricCard
                     icon={LuCalendarDays}

@@ -184,6 +184,8 @@ total-pages-read = Total des pages lues
 pages-per-hour = Pages/heure
 # Abbreviation for Pages Per Hour
 pph-abbreviation = p/h
+# Estimated time remaining to finish an in-progress book
+estimated-time-left = Temps restant
 reading-sessions-label = { $count ->
     [one] Session de lecture
    *[other] Sessions de lecture

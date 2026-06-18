@@ -116,6 +116,71 @@ export function formatReadingSpeed(value: number | null | undefined): string {
     });
 }
 
+/**
+ * Estimate the remaining reading time (in seconds) for an in-progress book.
+ *
+ * Method C (primary) — page coverage: `(total_pages - pages_read) / speed`.
+ * `pages_read` is the count of *distinct* pages KOReader has logged as read, so
+ * this is robust both to jumping ahead (position ≠ pages actually read) and to
+ * partial time tracking. It needs an accurate total page count and reading speed.
+ *
+ * Method B (fallback) — position based: `total_pages * (1 - position) / speed`.
+ * Used when we don't have distinct-pages-read. Assumes everything before the
+ * current position is read, so it under-counts when chapters are skipped.
+ *
+ * Method A (last resort) — time based: `time_spent * (1 - position) / position`.
+ * Used only when no page/speed signal exists. Fragile when progress and tracked
+ * time come from inconsistent histories.
+ *
+ * Returns `null` when there is not enough signal, or when progress is too low
+ * (estimate would explode) or effectively complete.
+ */
+export function estimateTimeToFinishSeconds(params: {
+    progress: number | null | undefined;
+    totalReadingTimeSec: number | null | undefined;
+    readingSpeedPagesPerHour?: number | null | undefined;
+    totalPages?: number | null | undefined;
+    pagesRead?: number | null | undefined;
+}): number | null {
+    const {
+        progress,
+        totalReadingTimeSec,
+        readingSpeedPagesPerHour,
+        totalPages,
+        pagesRead,
+    } = params;
+
+    if (!isFiniteNumber(progress) || progress <= 0.02 || progress >= 0.99) {
+        return null;
+    }
+
+    const hasSpeed =
+        isFiniteNumber(readingSpeedPagesPerHour) &&
+        readingSpeedPagesPerHour > 0;
+    const hasTotalPages = isFiniteNumber(totalPages) && totalPages > 0;
+
+    // Method C — page coverage (primary).
+    if (hasSpeed && hasTotalPages && isFiniteNumber(pagesRead)) {
+        const remainingPages = Math.max(0, totalPages - pagesRead);
+        if (remainingPages > 0) {
+            return Math.round((remainingPages / readingSpeedPagesPerHour) * 3600);
+        }
+    }
+
+    // Method B — position based (fallback).
+    if (hasSpeed && hasTotalPages) {
+        const remainingPages = totalPages * (1 - progress);
+        return Math.round((remainingPages / readingSpeedPagesPerHour) * 3600);
+    }
+
+    // Method A — time based (last resort).
+    if (isFiniteNumber(totalReadingTimeSec) && totalReadingTimeSec > 0) {
+        return Math.round((totalReadingTimeSec * (1 - progress)) / progress);
+    }
+
+    return null;
+}
+
 export function calculateAverageReadingSpeed(
     pagesRead: number,
     readingTimeSeconds: number,

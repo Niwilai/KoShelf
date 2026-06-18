@@ -200,6 +200,8 @@ total-pages-read = Всего прочитано страниц
 pages-per-hour = Страниц/час
 # Abbreviation for Pages Per Hour
 pph-abbreviation = стр/ч
+# Estimated time remaining to finish an in-progress book
+estimated-time-left = Осталось времени
 reading-sessions-label = { $count ->
     [one] Сессия чтения
     [few] Сессии чтения
