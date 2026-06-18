@@ -86,6 +86,7 @@ pub struct ServerState {
 pub struct WebServer {
     media_cache_dir: PathBuf,
     port: u16,
+    open_browser: bool,
     site_store: SharedSiteStore,
     reading_data_store: SharedReadingDataStore,
     update_notifier: UpdateNotifier,
@@ -98,6 +99,7 @@ pub struct WebServer {
 pub struct WebServerOptions {
     pub media_cache_dir: PathBuf,
     pub port: u16,
+    pub open_browser: bool,
     pub site_store: SharedSiteStore,
     pub reading_data_store: SharedReadingDataStore,
     pub update_notifier: UpdateNotifier,
@@ -112,6 +114,7 @@ impl WebServer {
         let WebServerOptions {
             media_cache_dir,
             port,
+            open_browser,
             site_store,
             reading_data_store,
             update_notifier,
@@ -124,6 +127,7 @@ impl WebServer {
         Self {
             media_cache_dir,
             port,
+            open_browser,
             site_store,
             reading_data_store,
             update_notifier,
@@ -225,6 +229,12 @@ impl WebServer {
             },
         );
 
+        if self.open_browser {
+            let url = format!("http://localhost:{}", self.port);
+            info!("Opening browser at {}", url);
+            open_in_browser(&url);
+        }
+
         axum::serve(
             listener,
             app.into_make_service_with_connect_info::<SocketAddr>(),
@@ -232,5 +242,32 @@ impl WebServer {
         .await?;
 
         Ok(())
+    }
+}
+
+/// Best-effort launch of the system default browser at `url`.
+///
+/// Failures are logged rather than propagated: not being able to open a
+/// browser (e.g. on a headless host) should never stop the server.
+fn open_in_browser(url: &str) {
+    use std::process::Command;
+
+    #[cfg(target_os = "macos")]
+    let spawned = Command::new("open").arg(url).spawn();
+
+    #[cfg(target_os = "windows")]
+    let spawned = Command::new("cmd").args(["/C", "start", "", url]).spawn();
+
+    #[cfg(all(unix, not(target_os = "macos")))]
+    let spawned = Command::new("xdg-open").arg(url).spawn();
+
+    #[cfg(not(any(unix, windows)))]
+    let spawned: std::io::Result<std::process::Child> = Err(std::io::Error::new(
+        std::io::ErrorKind::Unsupported,
+        "opening a browser is not supported on this platform",
+    ));
+
+    if let Err(e) = spawned {
+        log::warn!("Failed to open browser at {}: {}", url, e);
     }
 }

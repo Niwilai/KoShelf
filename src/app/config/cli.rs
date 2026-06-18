@@ -168,6 +168,11 @@ pub struct ServeArgs {
     #[arg(short, long, env = "KOSHELF_PORT", default_value = "3000")]
     pub port: u16,
 
+    /// Open the server URL in the default web browser once it is listening.
+    /// Intended for local/desktop use; leave off for headless deployments.
+    #[arg(long, env = "KOSHELF_OPEN", default_value = "false")]
+    pub open: bool,
+
     /// Enable password authentication.
     /// On first run, generates a random password and prints it to stderr.
     #[arg(long, env = "KOSHELF_ENABLE_AUTH", default_value = "false")]

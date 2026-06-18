@@ -166,6 +166,7 @@ pub(crate) async fn serve(args: ServeArgs) -> Result<()> {
     let web_server = WebServer::new(WebServerOptions {
         media_cache_dir: output_dir,
         port: args.port,
+        open_browser: args.open,
         site_store,
         reading_data_store,
         update_notifier,
