@@ -203,6 +203,11 @@ pub fn ensure_plain_directory(path: &Path) -> Result<()> {
 /// Create or update a symlink `files_dir/{id}.{format}` → `source_path`.
 ///
 /// If a symlink already exists but points to a different target, it is replaced.
+///
+/// The symlink target is always stored as an absolute, canonical path so the link
+/// resolves correctly regardless of the current working directory. A relative
+/// `source_path` (e.g. `./books/foo.epub`) is resolved against the process working
+/// directory before being recorded.
 pub fn sync_item_file_symlink(
     item_id: &str,
     format: &str,
@@ -219,17 +224,23 @@ pub fn sync_item_file_symlink(
     })?;
 
     let link_path = files_dir.join(basename);
+    let symlink_target = absolute_symlink_target(source_path)?;
 
-    if link_path.exists() {
+    // Use `symlink_metadata` (not `exists`) so broken symlinks are still detected:
+    // `Path::exists` follows the link and returns false for a dangling target,
+    // which would otherwise leave a stale broken link in place.
+    if fs::symlink_metadata(&link_path).is_ok() {
         if link_path.is_symlink() {
-            match fs::read_link(&link_path) {
-                Ok(existing_target) if existing_target == source_path => return Ok(()),
-                _ => {
-                    fs::remove_file(&link_path).with_context(|| {
-                        format!("Failed to remove stale file symlink {:?}", link_path)
-                    })?;
-                }
+            let unchanged = fs::read_link(&link_path)
+                .ok()
+                .and_then(|existing| resolve_symlink_target(&link_path, &existing))
+                .is_some_and(|resolved| resolved == symlink_target);
+            if unchanged {
+                return Ok(());
             }
+            fs::remove_file(&link_path).with_context(|| {
+                format!("Failed to remove stale file symlink {:?}", link_path)
+            })?;
         } else {
             fs::remove_file(&link_path)
                 .with_context(|| format!("Failed to remove existing file {:?}", link_path))?;
@@ -237,17 +248,48 @@ pub fn sync_item_file_symlink(
     }
 
     #[cfg(unix)]
-    std::os::unix::fs::symlink(source_path, &link_path)
+    std::os::unix::fs::symlink(&symlink_target, &link_path)
         .with_context(|| format!("Failed to create file symlink {:?}", link_path))?;
 
     #[cfg(not(unix))]
     {
         // On non-Unix platforms, fall back to a hard copy.
-        fs::copy(source_path, &link_path)
+        fs::copy(&symlink_target, &link_path)
             .with_context(|| format!("Failed to copy item file to {:?}", link_path))?;
     }
 
     Ok(())
+}
+
+/// Resolve a (possibly relative) book path to an absolute, canonical path
+/// suitable for use as a symlink target.
+fn absolute_symlink_target(source_path: &Path) -> Result<PathBuf> {
+    let absolute = if source_path.is_absolute() {
+        source_path.to_path_buf()
+    } else {
+        std::env::current_dir()
+            .context("Failed to resolve current directory for item file symlink")?
+            .join(source_path)
+    };
+
+    fs::canonicalize(&absolute).with_context(|| {
+        format!(
+            "Failed to resolve item file source path {:?} (from {:?})",
+            absolute, source_path
+        )
+    })
+}
+
+/// Resolve an existing symlink's recorded target to its canonical path, so it can
+/// be compared against a freshly computed absolute target.
+fn resolve_symlink_target(link_path: &Path, target: &Path) -> Option<PathBuf> {
+    let resolved = if target.is_absolute() {
+        target.to_path_buf()
+    } else {
+        link_path.parent()?.join(target)
+    };
+
+    fs::canonicalize(resolved).ok()
 }
 
 /// Remove all item file entries for a given item ID from `files_dir`.
