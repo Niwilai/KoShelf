@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { Link } from 'react-router';
 import { LuGithub, LuSettings } from 'react-icons/lu';
 import { translation } from '../../shared/i18n';
@@ -51,17 +52,25 @@ export function ShellSidebar({
             </div>
 
             <nav className="flex-1 px-4 py-6 space-y-3">
-                {primaryNavItems.map((item) => {
+                {primaryNavItems.map((item, index) => {
                     const active = isActivePath(currentPath, item.routeId);
                     const ItemIcon = item.icon;
+                    const showDivider =
+                        item.routeId === 'statistics' && index > 0;
 
                     return (
-                        <Link
-                            key={item.href}
-                            id={item.id}
-                            to={item.href}
-                            className={`sidebar-item-modern group ${active ? 'sidebar-item-modern-active' : ''}`}
-                        >
+                        <Fragment key={item.href}>
+                            {showDivider && (
+                                <div
+                                    className="mx-2 border-t border-gray-200/60 dark:border-dark-700/60"
+                                    aria-hidden="true"
+                                />
+                            )}
+                            <Link
+                                id={item.id}
+                                to={item.href}
+                                className={`sidebar-item-modern group ${active ? 'sidebar-item-modern-active' : ''}`}
+                            >
                             <div
                                 className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ease-out border-2 border-transparent ${
                                     active
@@ -86,8 +95,9 @@ export function ShellSidebar({
                                 }`}
                             >
                                 {item.label}
-                            </span>
-                        </Link>
+                                </span>
+                            </Link>
+                        </Fragment>
                     );
                 })}
             </nav>
