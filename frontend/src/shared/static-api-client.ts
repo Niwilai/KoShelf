@@ -9,6 +9,7 @@ import { normalizeScope } from './api-client';
 import { fetchJson } from './api-fetch';
 import type {
     AllAnnotationsData,
+    CollectionsData,
     PageActivityData,
     ExportPageActivityData,
     ExportReadingPeriods,
@@ -117,6 +118,12 @@ export class StaticApiClient implements ApiClient {
 
     async getAllAnnotations(): Promise<AllAnnotationsData> {
         return (await fetchJson('/data/annotations.json')) as AllAnnotationsData;
+    }
+
+    async getCollections(): Promise<CollectionsData> {
+        return (await fetchJson(
+            '/data/collections.json',
+        )) as CollectionsData;
     }
 
     async getItems(scope?: ScopeValue): Promise<LibraryListData> {

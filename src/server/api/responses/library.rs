@@ -170,6 +170,19 @@ pub struct AllAnnotationsData {
     pub annotations: Vec<AllAnnotationsEntry>,
 }
 
+// ── Collections ───────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserCollection {
+    pub name: String,
+    pub items: Vec<LibraryListItem>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CollectionsData {
+    pub collections: Vec<UserCollection>,
+}
+
 // ── Response wrappers ─────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

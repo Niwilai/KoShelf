@@ -65,6 +65,11 @@ fn merge_common_with_file_config(
         {
             common.statistics_db = Some(p.clone());
         }
+        if let Some(ref p) = lib.collections_path
+            && not_explicit(matches, "collections_path")
+        {
+            common.collections_path = Some(p.clone());
+        }
         if let Some(ref p) = lib.kobo_db
             && not_explicit(matches, "kobo_db")
         {

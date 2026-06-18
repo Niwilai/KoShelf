@@ -1,5 +1,6 @@
 import type {
     AllAnnotationsData,
+    CollectionsData,
     PageActivityData,
     LibraryDetailData,
     LibraryListData,
@@ -42,6 +43,7 @@ export interface ApiClient {
     changePassword(currentPassword: string, newPassword: string): Promise<void>;
     logout(): Promise<void>;
     getAllAnnotations(): Promise<AllAnnotationsData>;
+    getCollections(): Promise<CollectionsData>;
     getItems(scope?: ScopeValue): Promise<LibraryListData>;
     getItem(id: string): Promise<LibraryDetailData>;
     getReadingSummary(

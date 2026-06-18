@@ -59,6 +59,19 @@ pub struct AnnotationRow {
     pub drawer: Option<String>,
 }
 
+#[derive(Debug, Clone)]
+pub struct CollectionRow {
+    pub name: String,
+    pub display_order: i64,
+}
+
+#[derive(Debug, Clone)]
+pub struct CollectionItemRow {
+    pub collection_name: String,
+    pub item_id: String,
+    pub item_order: i64,
+}
+
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct FingerprintRow {
     pub item_id: String,

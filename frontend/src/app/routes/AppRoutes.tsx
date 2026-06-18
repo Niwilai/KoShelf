@@ -6,6 +6,7 @@ import { LoadingSpinner } from '../../shared/ui/feedback/LoadingSpinner';
 import { PageContent } from '../../shared/ui/layout/PageContent';
 import {
     CalendarRoute,
+    CollectionsRoute,
     LibraryDetailRoute,
     LibraryListRoute,
     LoginRoute,
@@ -90,6 +91,10 @@ export function AppRoutes({
                     <Route
                         path={routePathPattern('notes')}
                         element={<NotesRoute />}
+                    />
+                    <Route
+                        path={routePathPattern('collections')}
+                        element={<CollectionsRoute />}
                     />
                     <Route
                         path={routePathPattern('settings')}

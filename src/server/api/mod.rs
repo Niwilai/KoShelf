@@ -13,6 +13,7 @@ pub fn routes() -> Router<ServerState> {
     Router::new()
         .route("/api/site", get(handlers::site))
         .route("/api/items", get(handlers::items))
+        .route("/api/collections", get(handlers::collections))
         .route("/api/annotations", get(handlers::all_annotations))
         .route("/api/items/{id}", get(handlers::item_detail))
         .route(
@@ -42,6 +43,7 @@ pub fn route_paths() -> &'static [&'static str] {
     &[
         "/api/site",
         "/api/items",
+        "/api/collections",
         "/api/annotations",
         "/api/items/{id}",
         "/api/items/{id}/page-activity",

@@ -165,6 +165,50 @@ impl LibraryRepository {
         .context("Failed to load fingerprints")
     }
 
+    /// Whether at least one non-empty collection exists.
+    pub async fn collections_exist(&self) -> Result<bool> {
+        let exists: bool =
+            sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM collection_items)")
+                .fetch_one(&self.pool)
+                .await
+                .context("Failed to query collection existence")?;
+        Ok(exists)
+    }
+
+    /// Load all collections with their books as `LibraryListItem`s, preserving
+    /// KOReader's manual ordering both for collections and for books within them.
+    pub async fn load_collections_with_items(
+        &self,
+    ) -> Result<Vec<(String, Vec<LibraryListItem>)>> {
+        let names: Vec<(String,)> =
+            sqlx::query_as("SELECT name FROM collections ORDER BY display_order ASC, name ASC")
+                .fetch_all(&self.pool)
+                .await
+                .context("Failed to load collections")?;
+
+        let mut result = Vec::with_capacity(names.len());
+        for (name,) in names {
+            let items = sqlx::query_as::<_, LibraryListItem>(
+                "SELECT
+                    li.id, li.title, li.authors_json, li.series_json, li.status,
+                    li.progress_percentage, li.rating, li.annotation_count,
+                    li.cover_url, li.content_type, li.last_open_at
+                 FROM collection_items ci
+                 JOIN library_items li ON li.id = ci.item_id
+                 WHERE ci.collection_name = ?1
+                 ORDER BY ci.item_order ASC, li.id ASC",
+            )
+            .bind(&name)
+            .fetch_all(&self.pool)
+            .await
+            .context("Failed to load collection items")?;
+
+            result.push((name, items));
+        }
+
+        Ok(result)
+    }
+
     /// Query whether the library contains books and/or comics.
     pub async fn query_content_type_flags(&self) -> Result<(bool, bool)> {
         let row: (i32, i32) = sqlx::query_as(

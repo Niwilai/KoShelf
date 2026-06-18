@@ -1,5 +1,5 @@
 use crate::app::config::{CommonArgs, SiteConfig, parse_time_to_seconds};
-use crate::pipeline::ingest::{load_reading_data, sync_library};
+use crate::pipeline::ingest::{load_reading_data, sync_collections, sync_library};
 use crate::pipeline::media::{self, resolve_media_dirs};
 use crate::pipeline::recap::regenerate_share_images;
 use crate::server::api::responses::site::{PasswordPolicy, SiteAuth, SiteCapabilities, SiteData};
@@ -84,6 +84,7 @@ fn build_site_config(
         library_paths: common.library_path.clone(),
         metadata_location: metadata_location(common),
         statistics_db_path: common.statistics_db.clone(),
+        collections_path: common.collections_path.clone(),
         kobo_db_path: common.kobo_db.clone(),
         heatmap_scale_max,
         time_config: TimeConfig::from_cli(&common.timezone, &common.day_start_time)?,
@@ -200,6 +201,9 @@ pub(crate) async fn initialize_pipeline(
         }
     }
 
+    // ── 3b. Sync collections ─────────────────────────────────────────
+    sync_collections(&config, &repo).await?;
+
     // ── 4. Load statistics ───────────────────────────────────────────
     let reading_data = load_reading_data(&config, &repo).await?;
     let has_reading_data = reading_data
@@ -222,6 +226,7 @@ pub(crate) async fn initialize_pipeline(
     // ── 6. Build site metadata ───────────────────────────────────────
     let generated_at = config.time_config.now_rfc3339();
     let (has_books, has_comics) = repo.query_content_type_flags().await?;
+    let has_collections = repo.collections_exist().await?;
     let auth = if config.auth_enabled {
         Some(SiteAuth {
             authenticated: false,
@@ -240,6 +245,7 @@ pub(crate) async fn initialize_pipeline(
             has_books,
             has_comics,
             has_reading_data,
+            has_collections,
             has_files: is_internal_server || config.include_files,
             has_writeback: config.writeback_enabled,
         },

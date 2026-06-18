@@ -10,6 +10,7 @@ import { fetchJson } from './api-fetch';
 import type {
     AllAnnotationsData,
     ApiResponse,
+    CollectionsData,
     PageActivityData,
     LibraryDetailData,
     LibraryListData,
@@ -98,6 +99,13 @@ export class HttpApiClient implements ApiClient {
         const response = (await fetchJson(
             '/api/annotations',
         )) as ApiResponse<AllAnnotationsData>;
+        return response.data;
+    }
+
+    async getCollections(): Promise<CollectionsData> {
+        const response = (await fetchJson(
+            '/api/collections',
+        )) as ApiResponse<CollectionsData>;
         return response.data;
     }
 

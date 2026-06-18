@@ -4,7 +4,9 @@ use anyhow::{Context, Result};
 use sqlx::{QueryBuilder, Sqlite};
 
 use crate::store::sqlite::repo::LibraryRepository;
-use crate::store::sqlite::repo::rows::{AnnotationRow, FingerprintRow, LibraryItemRow};
+use crate::store::sqlite::repo::rows::{
+    AnnotationRow, CollectionItemRow, CollectionRow, FingerprintRow, LibraryItemRow,
+};
 
 impl LibraryRepository {
     pub async fn upsert_item(&self, item: &LibraryItemRow) -> Result<()> {
@@ -159,6 +161,52 @@ impl LibraryRepository {
         }
 
         tx.commit().await.context("commit annotations")?;
+        Ok(())
+    }
+
+    /// Replace all collections and their items with the provided set.
+    ///
+    /// Collections are a full snapshot of KOReader's `collection.lua`, so this
+    /// clears the existing rows and re-inserts in a single transaction.
+    pub async fn replace_collections(
+        &self,
+        collections: &[CollectionRow],
+        items: &[CollectionItemRow],
+    ) -> Result<()> {
+        let mut tx = self.pool.begin().await.context("begin tx")?;
+
+        sqlx::query("DELETE FROM collection_items")
+            .execute(&mut *tx)
+            .await
+            .context("delete old collection items")?;
+        sqlx::query("DELETE FROM collections")
+            .execute(&mut *tx)
+            .await
+            .context("delete old collections")?;
+
+        for collection in collections {
+            sqlx::query("INSERT INTO collections (name, display_order) VALUES (?1, ?2)")
+                .bind(&collection.name)
+                .bind(collection.display_order)
+                .execute(&mut *tx)
+                .await
+                .context("insert collection")?;
+        }
+
+        for item in items {
+            sqlx::query(
+                "INSERT INTO collection_items (collection_name, item_id, item_order)
+                 VALUES (?1, ?2, ?3)",
+            )
+            .bind(&item.collection_name)
+            .bind(&item.item_id)
+            .bind(item.item_order)
+            .execute(&mut *tx)
+            .await
+            .context("insert collection item")?;
+        }
+
+        tx.commit().await.context("commit collections")?;
         Ok(())
     }
 

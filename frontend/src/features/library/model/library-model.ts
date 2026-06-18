@@ -69,7 +69,7 @@ export function normalizeLibraryFilterValue(
     return value as LibraryFilterValue;
 }
 
-function sectionFromLibraryItem(item: LibraryListItem): LibrarySectionKey {
+export function sectionFromLibraryItem(item: LibraryListItem): LibrarySectionKey {
     if (item.status === 'reading') {
         return 'reading';
     }

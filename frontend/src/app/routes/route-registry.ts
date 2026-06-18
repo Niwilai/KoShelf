@@ -6,6 +6,7 @@ export type RouteId =
     | 'statistics'
     | 'calendar'
     | 'notes'
+    | 'collections'
     | 'settings'
     | 'books-list'
     | 'books-detail'
@@ -19,6 +20,7 @@ export type MainRouteId =
     | 'statistics'
     | 'calendar'
     | 'notes'
+    | 'collections'
     | 'settings'
     | 'books-list'
     | 'comics-list'
@@ -40,6 +42,7 @@ const ROUTE_DEFINITIONS: readonly RouteDefinition[] = [
     { id: 'statistics', path: '/statistics', mainRouteId: 'statistics' },
     { id: 'calendar', path: '/calendar', mainRouteId: 'calendar' },
     { id: 'notes', path: '/notes', mainRouteId: 'notes' },
+    { id: 'collections', path: '/collections', mainRouteId: 'collections' },
     { id: 'settings', path: '/settings', mainRouteId: 'settings' },
     { id: 'books-list', path: '/books', mainRouteId: 'books-list' },
     { id: 'books-detail', path: '/books/:id', mainRouteId: 'books-list' },
@@ -61,6 +64,7 @@ const MAIN_ROUTE_IDS = [
     'statistics',
     'calendar',
     'notes',
+    'collections',
     'settings',
     'recap',
 ] as const;
@@ -77,6 +81,7 @@ const SCROLLABLE_ROUTE_IDS: ReadonlySet<string> = new Set<string>([
     'books-detail',
     'comics-detail',
     'notes',
+    'collections',
 ]);
 
 export function isScrollableRouteId(

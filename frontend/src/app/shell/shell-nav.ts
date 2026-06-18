@@ -4,7 +4,13 @@ import {
     HiOutlineBookOpen,
     HiOutlineChatBubbleBottomCenterText,
 } from 'react-icons/hi2';
-import { LuCalendarDays, LuHistory, LuNotebookPen, LuSettings } from 'react-icons/lu';
+import {
+    LuCalendarDays,
+    LuHistory,
+    LuLibrary,
+    LuNotebookPen,
+    LuSettings,
+} from 'react-icons/lu';
 
 import type { SiteData } from '../../shared/contracts';
 import { translation } from '../../shared/i18n';
@@ -28,6 +34,7 @@ const ICONS = {
     statistics: IoStatsChartOutline,
     calendar: LuCalendarDays,
     notes: LuNotebookPen,
+    collections: LuLibrary,
     recap: LuHistory,
     settings: LuSettings,
 } as const;
@@ -64,6 +71,16 @@ export function buildNavItems(site: SiteData | undefined): NavItem[] {
             label: translation.get('all-notes'),
             href: '/notes',
             icon: ICONS.notes,
+        });
+    }
+
+    if (capabilities.has_collections) {
+        items.push({
+            id: 'nav-collections',
+            routeId: 'collections',
+            label: translation.get('collections'),
+            href: '/collections',
+            icon: ICONS.collections,
         });
     }
 

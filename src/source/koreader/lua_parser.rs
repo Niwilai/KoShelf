@@ -8,6 +8,25 @@ use mlua::{ChunkMode, Lua, LuaOptions, StdLib, Table, Value};
 use std::fs;
 use std::path::Path;
 
+/// A single book entry inside a parsed KOReader collection.
+#[derive(Debug, Clone)]
+pub struct ParsedCollectionItem {
+    /// Absolute book path as stored by KOReader (e.g. `/mnt/us/books/...`).
+    pub file: String,
+    /// Manual ordering within the collection.
+    pub order: i64,
+}
+
+/// A KOReader user collection (shelf) parsed from `collection.lua`.
+#[derive(Debug, Clone)]
+pub struct ParsedCollection {
+    pub name: String,
+    /// Display order of the collection itself (from its `settings.order`).
+    pub order: i64,
+    /// Books in the collection, sorted by their manual order.
+    pub items: Vec<ParsedCollectionItem>,
+}
+
 /// Parses KOReader `.sdr/metadata.*.lua` sidecar files into [`KoReaderMetadata`].
 pub struct LuaParser {
     lua: Lua,
@@ -31,30 +50,96 @@ impl LuaParser {
     pub fn parse(&self, lua_path: &Path) -> Result<KoReaderMetadata> {
         debug!("Parsing Lua metadata: {:?}", lua_path);
 
+        match self.eval_file(lua_path)? {
+            Value::Table(table) => self.parse_metadata_table(table),
+            _ => Err(anyhow!("Expected Lua file to return a table")),
+        }
+    }
+
+    /// Evaluate KOReader's `collection.lua` and return its user collections.
+    ///
+    /// The file is a map of `collection name -> { [1] = { file, order }, ..., settings = { order } }`.
+    /// Collections are returned sorted by their `settings.order`, and books within
+    /// each collection sorted by their per-entry `order`.
+    pub fn parse_collections(&self, lua_path: &Path) -> Result<Vec<ParsedCollection>> {
+        debug!("Parsing Lua collections: {:?}", lua_path);
+
+        match self.eval_file(lua_path)? {
+            Value::Table(table) => self.parse_collections_table(table),
+            _ => Err(anyhow!("Expected Lua file to return a table")),
+        }
+    }
+
+    /// Read a Lua file (tolerating invalid UTF-8) and evaluate it to a [`Value`].
+    fn eval_file(&self, lua_path: &Path) -> Result<Value> {
         let bytes = fs::read(lua_path)
             .with_context(|| format!("Failed to read Lua file: {:?}", lua_path))?;
         let content = match String::from_utf8(bytes) {
             Ok(content) => content,
             Err(error) => {
                 warn!(
-                    "Lua metadata file {:?} contains invalid UTF-8 ({}); replacing invalid bytes",
+                    "Lua file {:?} contains invalid UTF-8 ({}); replacing invalid bytes",
                     lua_path, error
                 );
                 String::from_utf8_lossy(error.as_bytes()).into_owned()
             }
         };
 
-        let value: Value = self
-            .lua
+        self.lua
             .load(&content)
             .set_mode(ChunkMode::Text)
             .eval()
-            .map_err(|e| anyhow!("Failed to parse Lua file {:?}: {}", lua_path, e))?;
+            .map_err(|e| anyhow!("Failed to parse Lua file {:?}: {}", lua_path, e))
+    }
 
-        match value {
-            Value::Table(table) => self.parse_metadata_table(table),
-            _ => Err(anyhow!("Expected Lua file to return a table")),
+    fn parse_collections_table(&self, table: Table) -> Result<Vec<ParsedCollection>> {
+        let mut collections: Vec<ParsedCollection> = Vec::new();
+
+        for pair in table.pairs::<String, Value>() {
+            let (name, value) = match pair {
+                Ok(pair) => pair,
+                Err(error) => {
+                    warn!("Skipping malformed collection entry: {}", error);
+                    continue;
+                }
+            };
+
+            let Value::Table(collection_table) = value else {
+                continue;
+            };
+
+            let order = match collection_table.get("settings") {
+                Ok(Value::Table(settings)) => self
+                    .get_optional_u32(&settings, "order")?
+                    .map(|order| order as i64),
+                _ => None,
+            }
+            .unwrap_or(i64::MAX);
+
+            // Books are stored under 1-indexed integer keys, alongside the
+            // string-keyed "settings" entry which we skip.
+            let mut items: Vec<ParsedCollectionItem> = Vec::new();
+            let mut index = 1;
+            while let Ok(Value::Table(entry)) = collection_table.get(index) {
+                if let Some(file) = self.get_optional_string(&entry, "file")? {
+                    let item_order = self
+                        .get_optional_u32(&entry, "order")?
+                        .map(|order| order as i64)
+                        .unwrap_or(index);
+                    items.push(ParsedCollectionItem {
+                        file,
+                        order: item_order,
+                    });
+                }
+                index += 1;
+            }
+
+            items.sort_by_key(|item| item.order);
+            collections.push(ParsedCollection { name, order, items });
         }
+
+        collections.sort_by(|a, b| a.order.cmp(&b.order).then_with(|| a.name.cmp(&b.name)));
+        Ok(collections)
     }
 
     fn parse_metadata_table(&self, table: Table) -> Result<KoReaderMetadata> {

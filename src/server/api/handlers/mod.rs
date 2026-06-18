@@ -4,7 +4,7 @@ mod reading;
 mod site;
 pub(crate) use events::events_stream;
 pub(crate) use library::{
-    all_annotations, delete_annotation, item_detail, item_page_activity, items,
+    all_annotations, collections, delete_annotation, item_detail, item_page_activity, items,
     update_annotation, update_item,
 };
 pub(crate) use reading::{

@@ -56,6 +56,19 @@ pub(crate) async fn all_annotations(
     )))
 }
 
+pub(crate) async fn collections(
+    State(state): State<ServerState>,
+) -> ApiResult<impl IntoResponse> {
+    let payload = library::collections(&state.library_repo)
+        .await
+        .map_err(|e| {
+            warn!("Failed to list collections: {}", e);
+            ApiResponseError::internal_server_error()
+        })?;
+
+    Ok(Json(ApiResponse::new(payload)))
+}
+
 pub(crate) async fn items(
     State(state): State<ServerState>,
     Query(query): Query<ScopeQuery>,

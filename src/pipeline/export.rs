@@ -107,6 +107,7 @@ pub async fn export_data_files(
     let has_reading_data = reading_data
         .map(|rd| !rd.stats_data.page_stats.is_empty())
         .unwrap_or(false);
+    let has_collections = library_repo.collections_exist().await?;
 
     // site.json
     write_json(
@@ -120,6 +121,7 @@ pub async fn export_data_files(
                 has_books,
                 has_comics,
                 has_reading_data,
+                has_collections,
                 has_files: config.include_files,
 
                 has_writeback: false,
@@ -151,6 +153,9 @@ pub async fn export_data_files(
 
     // annotations.json — all annotations across all items
     export_all_annotations(data_dir, library_repo).await?;
+
+    // collections.json — user collections with ordered books
+    export_collections(data_dir, library_repo).await?;
 
     info!(
         "Exported {} library items ({} detail files)",
@@ -291,6 +296,16 @@ async fn export_all_annotations(
         &AllAnnotationsData { annotations },
     )?;
     info!("Exported {} annotations", count);
+    Ok(())
+}
+
+// ── Collections export ──────────────────────────────────────────────────
+
+async fn export_collections(data_dir: &Path, library_repo: &LibraryRepository) -> Result<()> {
+    let data = library::collections(library_repo).await?;
+    let count = data.collections.len();
+    write_json(&data_dir.join("collections.json"), &data)?;
+    info!("Exported {} collections", count);
     Ok(())
 }
 
@@ -796,6 +811,7 @@ mod tests {
     const EXPORTED: &[&str] = &[
         "/api/site",
         "/api/items",
+        "/api/collections",
         "/api/annotations",
         "/api/items/{id}",
         "/api/items/{id}/page-activity",

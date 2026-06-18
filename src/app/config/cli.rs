@@ -85,6 +85,11 @@ pub struct CommonArgs {
     #[arg(short, long, env = "KOSHELF_STATISTICS_DB")]
     pub statistics_db: Option<PathBuf>,
 
+    /// Path to KOReader's collection.lua for the Collections view (optional).
+    /// If omitted, KoShelf looks for `collection.lua` next to the statistics database.
+    #[arg(long, env = "KOSHELF_COLLECTIONS_PATH")]
+    pub collections_path: Option<PathBuf>,
+
     /// Path to Kobo's KoboReader.sqlite database for matching extensionless kepub files. Requires --library-path.
     #[arg(long, env = "KOSHELF_KOBO_DB")]
     pub kobo_db: Option<PathBuf>,
@@ -324,6 +329,12 @@ impl CommonArgs {
             && !stats_path.exists()
         {
             anyhow::bail!("Statistics database does not exist: {:?}", stats_path);
+        }
+
+        if let Some(ref collections_path) = self.collections_path
+            && !collections_path.exists()
+        {
+            anyhow::bail!("Collections file does not exist: {:?}", collections_path);
         }
 
         if let Some(ref kobo_db_path) = self.kobo_db

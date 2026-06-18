@@ -9,12 +9,17 @@ pub const TABLE_LIBRARY_ITEMS: &str = "library_items";
 pub const TABLE_LIBRARY_ANNOTATIONS: &str = "library_annotations";
 pub const TABLE_LIBRARY_ITEM_FINGERPRINTS: &str = "library_item_fingerprints";
 pub const TABLE_SHARE_IMAGE_FINGERPRINTS: &str = "share_image_fingerprints";
+pub const TABLE_COLLECTIONS: &str = "collections";
+pub const TABLE_COLLECTION_ITEMS: &str = "collection_items";
 
 pub const LIBRARY_DB_REQUIRED_TABLES: &[&str] = &[
     TABLE_LIBRARY_ITEMS,
     TABLE_LIBRARY_ANNOTATIONS,
     TABLE_LIBRARY_ITEM_FINGERPRINTS,
     TABLE_SHARE_IMAGE_FINGERPRINTS,
+    // Parent before child so the reversed drop order removes the child first.
+    TABLE_COLLECTIONS,
+    TABLE_COLLECTION_ITEMS,
 ];
 
 #[cfg(test)]
@@ -28,6 +33,7 @@ pub const LIBRARY_DB_REQUIRED_INDEXES: &[&str] = &[
     "idx_library_annotations_item_lua_index",
     "idx_library_item_fingerprints_book_path",
     "idx_library_item_fingerprints_metadata_path",
+    "idx_collection_items_collection",
 ];
 
 /// Open a SQLite connection pool for the library cache at the given file path.

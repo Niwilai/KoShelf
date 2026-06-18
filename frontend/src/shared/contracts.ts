@@ -2,6 +2,7 @@ export interface SiteCapabilities {
     has_books: boolean;
     has_comics: boolean;
     has_reading_data: boolean;
+    has_collections?: boolean;
     has_files?: boolean;
 
     has_writeback?: boolean;
@@ -315,6 +316,17 @@ export interface LibraryDetailStatistics {
 
 export interface LibraryListData {
     items: LibraryListItem[];
+}
+
+// ── Collections ──────────────────────────────────────────────────────────
+
+export interface UserCollection {
+    name: string;
+    items: LibraryListItem[];
+}
+
+export interface CollectionsData {
+    collections: UserCollection[];
 }
 
 export interface LibraryDetailData {

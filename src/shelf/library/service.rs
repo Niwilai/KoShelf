@@ -3,8 +3,8 @@
 use anyhow::Result;
 
 use crate::server::api::responses::library::{
-    LibraryCompletionEntry, LibraryCompletions, LibraryDetailData, LibraryDetailStatistics,
-    LibraryItemStats, LibraryListData, LibrarySessionStats,
+    CollectionsData, LibraryCompletionEntry, LibraryCompletions, LibraryDetailData,
+    LibraryDetailStatistics, LibraryItemStats, LibraryListData, LibrarySessionStats, UserCollection,
 };
 use crate::shelf::library::lookup_stat_book;
 use crate::shelf::library::queries::{IncludeToken, LibraryDetailQuery, LibraryListQuery};
@@ -18,6 +18,16 @@ use crate::store::sqlite::repo::LibraryRepository;
 pub async fn list(repo: &LibraryRepository, query: LibraryListQuery) -> Result<LibraryListData> {
     let items = repo.list_items(&query).await?;
     Ok(LibraryListData { items })
+}
+
+/// Fetch all user collections with their books in KOReader's manual order.
+pub async fn collections(repo: &LibraryRepository) -> Result<CollectionsData> {
+    let raw = repo.load_collections_with_items().await?;
+    let collections = raw
+        .into_iter()
+        .map(|(name, items)| UserCollection { name, items })
+        .collect();
+    Ok(CollectionsData { collections })
 }
 
 /// Fetch a single library item with optional includes (highlights, bookmarks,

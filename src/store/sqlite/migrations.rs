@@ -4,8 +4,9 @@ use sqlx::SqlitePool;
 use sqlx::migrate::MigrateError;
 
 use crate::store::sqlite::pool::{
-    LIBRARY_DB_REQUIRED_TABLES, TABLE_LIBRARY_ANNOTATIONS, TABLE_LIBRARY_ITEM_FINGERPRINTS,
-    TABLE_LIBRARY_ITEMS, TABLE_SHARE_IMAGE_FINGERPRINTS,
+    LIBRARY_DB_REQUIRED_TABLES, TABLE_COLLECTION_ITEMS, TABLE_COLLECTIONS,
+    TABLE_LIBRARY_ANNOTATIONS, TABLE_LIBRARY_ITEM_FINGERPRINTS, TABLE_LIBRARY_ITEMS,
+    TABLE_SHARE_IMAGE_FINGERPRINTS,
 };
 
 /// Run all pending library DB migrations using sqlx's embedded migration system.
@@ -68,6 +69,8 @@ fn drop_table_sql(table: &str) -> &'static str {
         TABLE_LIBRARY_ANNOTATIONS => "DROP TABLE IF EXISTS library_annotations",
         TABLE_LIBRARY_ITEM_FINGERPRINTS => "DROP TABLE IF EXISTS library_item_fingerprints",
         TABLE_SHARE_IMAGE_FINGERPRINTS => "DROP TABLE IF EXISTS share_image_fingerprints",
+        TABLE_COLLECTIONS => "DROP TABLE IF EXISTS collections",
+        TABLE_COLLECTION_ITEMS => "DROP TABLE IF EXISTS collection_items",
         _ => unreachable!("unexpected library DB table: {table}"),
     }
 }

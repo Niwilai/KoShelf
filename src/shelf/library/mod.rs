@@ -9,7 +9,7 @@ pub mod service;
 pub use build::upsert_single_item;
 pub use page_activity::page_activity;
 pub use queries::{LibraryDetailQuery, LibraryListQuery};
-pub use service::{detail, list};
+pub use service::{collections, detail, list};
 
 /// Case-insensitive lookup into `stats_by_md5`.
 pub(crate) fn lookup_stat_book<'a>(

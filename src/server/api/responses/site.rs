@@ -5,6 +5,7 @@ pub struct SiteCapabilities {
     pub has_books: bool,
     pub has_comics: bool,
     pub has_reading_data: bool,
+    pub has_collections: bool,
     pub has_files: bool,
 
     pub has_writeback: bool,

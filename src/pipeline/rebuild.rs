@@ -177,6 +177,7 @@ pub async fn rebuild(
             let has_reading_data = reading_data_store
                 .and_then(|s| s.get())
                 .is_some_and(|rd| !rd.stats_data.page_stats.is_empty());
+            let has_collections = repo.collections_exist().await.unwrap_or(false);
 
             let site_data = SiteData {
                 title: config.site_title.clone(),
@@ -185,6 +186,7 @@ pub async fn rebuild(
                     has_books,
                     has_comics,
                     has_reading_data,
+                    has_collections,
                     has_files: config.is_internal_server || config.include_files,
 
                     has_writeback: config.writeback_enabled,
@@ -377,6 +379,7 @@ mod tests {
             library_paths: vec![output_dir.join("library")],
             metadata_location: MetadataLocation::InBookFolder,
             statistics_db_path: None,
+            collections_path: None,
             kobo_db_path,
             heatmap_scale_max: None,
             time_config: TimeConfig::from_cli(&None, &None).expect("time config"),
