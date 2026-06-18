@@ -8,8 +8,8 @@ use crate::shelf::statistics::compute::completion_detection::{
 use crate::shelf::statistics::compute::sessions;
 use crate::shelf::time_config::TimeConfig;
 use crate::source::koreader::types::{
-    BookSessionStats, DailyStats, PageStat, ReadingStats, StatBook, StatisticsData, StreakInfo,
-    WeeklyStats,
+    BookCompletions, BookSessionStats, DailyStats, PageStat, ReadCompletion, ReadingStats, StatBook,
+    StatisticsData, StreakInfo, WeeklyStats,
 };
 
 /// Trait for calculating book session statistics
@@ -289,13 +289,37 @@ impl StatisticsCalculator {
         (longest_streak_info, current_streak_info)
     }
 
-    /// Populate completion data for all books in the statistics data
-    pub fn populate_completions(stats_data: &mut StatisticsData, time_config: &TimeConfig) {
+    /// Populate completion data for all books in the statistics data.
+    ///
+    /// In addition to the page-stat heuristic, any book whose MD5 is in
+    /// `completed_md5s` (i.e. the reader explicitly marked it finished in
+    /// KOReader) is guaranteed a completion entry even when its page-stat
+    /// coverage is too sparse for the heuristic to fire.
+    pub fn populate_completions(
+        stats_data: &mut StatisticsData,
+        time_config: &TimeConfig,
+        completed_md5s: &HashSet<String>,
+    ) {
         let detector = ReadCompletionDetector::with_config_and_time(
             CompletionConfig::default(),
             time_config.clone(),
         );
-        let all_completions = detector.detect_all_completions(stats_data);
+        let mut all_completions = detector.detect_all_completions(stats_data);
+
+        // Honour KOReader's explicit "complete" status for books the heuristic
+        // missed (e.g. only a fraction of pages have reading stats).
+        for book in &stats_data.books {
+            let marked_complete = completed_md5s.contains(&book.md5)
+                || completed_md5s.contains(&book.md5.to_lowercase());
+            if !marked_complete || all_completions.contains_key(&book.md5) {
+                continue;
+            }
+            if let Some(completion) =
+                Self::synthesize_status_completion(book, &stats_data.page_stats, time_config)
+            {
+                all_completions.insert(book.md5.clone(), BookCompletions::new(vec![completion]));
+            }
+        }
 
         for book in &mut stats_data.books {
             if let Some(completions) = all_completions.get(&book.md5) {
@@ -308,6 +332,56 @@ impl StatisticsCalculator {
                 book.completions = Some(completions.clone());
             }
         }
+    }
+
+    /// Build a completion for a book the reader explicitly marked finished in
+    /// KOReader, derived from whatever reading data exists.
+    ///
+    /// Prefers the book's page-stat range (start/end dates, reading time,
+    /// sessions, distinct pages). Falls back to the book's last-open timestamp
+    /// when no usable page stats are present. Returns `None` if no date can be
+    /// derived at all.
+    fn synthesize_status_completion(
+        book: &StatBook,
+        page_stats: &[PageStat],
+        time_config: &TimeConfig,
+    ) -> Option<ReadCompletion> {
+        let book_stats: Vec<PageStat> = page_stats
+            .iter()
+            .filter(|s| s.id_book == book.id && s.duration > 0)
+            .cloned()
+            .collect();
+
+        if !book_stats.is_empty() {
+            let start_time = book_stats.iter().map(|s| s.start_time).min()?;
+            let end_time = book_stats.iter().map(|s| s.start_time + s.duration).max()?;
+            let reading_time: i64 = book_stats.iter().map(|s| s.duration).sum();
+            let session_count = sessions::session_count(&book_stats);
+            let pages_read = book_stats
+                .iter()
+                .map(|s| s.page)
+                .collect::<HashSet<i64>>()
+                .len() as i64;
+
+            return Some(ReadCompletion::new(
+                time_config.format_date(start_time),
+                time_config.format_date(end_time),
+                reading_time,
+                session_count,
+                pages_read,
+            ));
+        }
+
+        // No usable page stats: fall back to the last-open date.
+        let last_open = book.last_open?;
+        let date = time_config.format_date(last_open);
+        Some(ReadCompletion::new(
+            date.clone(),
+            date,
+            book.total_read_time.unwrap_or(0),
+            0,
+            book.total_read_pages.unwrap_or(0),
+        ))
     }
 
     /// Calculate completion statistics across all books

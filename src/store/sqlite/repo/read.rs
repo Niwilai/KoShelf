@@ -222,6 +222,17 @@ impl LibraryRepository {
         Ok(rows.into_iter().map(|r| r.0).collect())
     }
 
+    /// Load IDs (MD5) of library items the reader explicitly marked finished
+    /// in KOReader (sidecar `summary.status == "complete"`).
+    pub async fn load_completed_item_ids(&self) -> Result<Vec<String>> {
+        let rows: Vec<(String,)> =
+            sqlx::query_as("SELECT id FROM library_items WHERE status = 'complete'")
+                .fetch_all(&self.pool)
+                .await
+                .context("Failed to load completed item IDs")?;
+        Ok(rows.into_iter().map(|r| r.0).collect())
+    }
+
     /// Load page scaling inputs keyed by item ID (MD5).
     ///
     /// Returns `(pagemap_doc_pages, doc_pages)` pairs. `doc_pages` is the rendered
