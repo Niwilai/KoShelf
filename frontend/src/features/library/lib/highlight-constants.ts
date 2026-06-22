@@ -128,3 +128,21 @@ export function colorQuoteBarGradient(
     if (!color) return COLOR_QUOTE_BAR_MAP[DEFAULT_HIGHLIGHT_COLOR];
     return COLOR_QUOTE_BAR_MAP[color] ?? UNKNOWN_QUOTE_BAR_GRADIENT;
 }
+
+// Classes to render highlighted text in its KOReader style (drawer). Returns an
+// empty string for the default marker style ('lighten'), which is conveyed by
+// the colored quote bar instead of a background on the text. The underline /
+// strikeout line uses a single neutral color (black in light mode, white in
+// dark mode) rather than the highlight color.
+export function highlightTextClass(drawer: string | null | undefined): string {
+    switch (drawer) {
+        case 'underscore':
+            return 'underline underline-offset-4 decoration-2 decoration-gray-900 dark:decoration-white';
+        case 'strikeout':
+            return 'line-through decoration-2 decoration-gray-900 dark:decoration-white';
+        case 'invert':
+            return 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900 px-1 rounded-sm';
+        default:
+            return '';
+    }
+}

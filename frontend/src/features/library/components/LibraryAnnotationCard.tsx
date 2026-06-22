@@ -25,6 +25,7 @@ import {
     colorDotClass,
     colorQuoteBarGradient,
     DRAWER_ICONS,
+    highlightTextClass,
 } from '../lib/highlight-constants';
 import type { LibraryAnnotation } from '../api/library-data';
 import { HighlightColorPicker } from './HighlightColorPicker';
@@ -54,7 +55,6 @@ function CardHeader({
     formattedDate,
     readerHref,
     drawerIcon,
-    drawerLabel,
 }: {
     variant: LibraryAnnotationCardVariant;
     chapter?: string | null;
@@ -62,7 +62,6 @@ function CardHeader({
     formattedDate: string | null;
     readerHref?: string | null;
     drawerIcon?: IconType | null;
-    drawerLabel?: string | null;
 }) {
     const isBookmark = variant === 'bookmark';
     const Tag = isBookmark ? 'div' : 'header';
@@ -76,10 +75,7 @@ function CardHeader({
                     (() => {
                         const Icon = drawerIcon;
                         return (
-                            <span
-                                className="hidden sm:inline-flex items-center justify-center px-2 py-1 rounded-md text-xs bg-gray-200/50 dark:bg-dark-700/50 text-gray-500 dark:text-dark-400"
-                                title={drawerLabel ?? undefined}
-                            >
+                            <span className="hidden sm:inline-flex items-center justify-center px-2 py-1 rounded-md text-xs bg-gray-200/50 dark:bg-dark-700/50 text-gray-500 dark:text-dark-400">
                                 <Icon
                                     className="w-3.5 h-3.5"
                                     aria-hidden="true"
@@ -401,6 +397,9 @@ export function LibraryAnnotationCard({
     const quoteBarClass = isHighlight
         ? colorQuoteBarGradient(annotation.color)
         : '';
+    const highlightTextClassName = isHighlight
+        ? highlightTextClass(annotation.drawer)
+        : '';
     const DrawerIcon = isHighlight
         ? (DRAWER_ICONS[annotation.drawer ?? 'lighten'] ?? DRAWER_ICONS.lighten)
         : null;
@@ -446,13 +445,6 @@ export function LibraryAnnotationCard({
                 formattedDate={formattedDate}
                 readerHref={readerHref}
                 drawerIcon={DrawerIcon}
-                drawerLabel={
-                    isHighlight
-                        ? translation.get(
-                              `highlight-drawer.${annotation.drawer ?? 'lighten'}`,
-                          )
-                        : null
-                }
             />
 
             {/* Highlight body: quote + note */}
@@ -464,7 +456,19 @@ export function LibraryAnnotationCard({
                                 className={`absolute top-0 left-0 w-1 h-full bg-linear-to-b ${quoteBarClass} rounded-full`}
                             ></div>
                             <blockquote className="text-gray-900 dark:text-white text-lg leading-relaxed pl-6 font-light whitespace-pre-wrap">
-                                {annotation.text}
+                                {highlightTextClassName ? (
+                                    <span
+                                        className={highlightTextClassName}
+                                        style={{
+                                            boxDecorationBreak: 'clone',
+                                            WebkitBoxDecorationBreak: 'clone',
+                                        }}
+                                    >
+                                        {annotation.text}
+                                    </span>
+                                ) : (
+                                    annotation.text
+                                )}
                             </blockquote>
                         </div>
                     )}

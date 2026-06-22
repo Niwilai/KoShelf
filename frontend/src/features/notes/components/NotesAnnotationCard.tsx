@@ -13,6 +13,7 @@ import { formatAnnotationDatetime } from '../../library/lib/library-detail-forma
 import {
     colorQuoteBarGradient,
     DRAWER_ICONS,
+    highlightTextClass,
 } from '../../library/lib/highlight-constants';
 import { buildRoutePath } from '../../../app/routes/route-registry';
 import { createDetailReturnState } from '../../../shared/lib/navigation/detail-return-state';
@@ -35,6 +36,9 @@ export function NotesAnnotationCard({ annotation, hasFiles }: NotesAnnotationCar
     const DrawerIcon = isHighlight
         ? (DRAWER_ICONS[annotation.drawer ?? 'lighten'] ?? DRAWER_ICONS.lighten)
         : null;
+    const highlightTextClassName = isHighlight
+        ? highlightTextClass(annotation.drawer)
+        : '';
 
     const detailRoute =
         annotation.item_content_type === 'comic'
@@ -153,7 +157,19 @@ export function NotesAnnotationCard({ annotation, hasFiles }: NotesAnnotationCar
                                 className={`absolute top-0 left-0 w-1 h-full bg-linear-to-b ${quoteBarClass} rounded-full`}
                             />
                             <blockquote className="text-gray-900 dark:text-white text-base leading-relaxed pl-5 font-light whitespace-pre-wrap">
-                                {annotation.text}
+                                {highlightTextClassName ? (
+                                    <span
+                                        className={highlightTextClassName}
+                                        style={{
+                                            boxDecorationBreak: 'clone',
+                                            WebkitBoxDecorationBreak: 'clone',
+                                        }}
+                                    >
+                                        {annotation.text}
+                                    </span>
+                                ) : (
+                                    annotation.text
+                                )}
                             </blockquote>
                         </div>
                     )}
