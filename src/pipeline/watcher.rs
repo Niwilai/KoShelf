@@ -96,19 +96,25 @@ impl FileWatcher {
             }
         }
 
-        if let Some(ref stats_path) = self.statistics_db_path
-            && stats_path.exists()
-            && let Some(parent) = stats_path.parent()
-        {
-            watcher.watch(parent, RecursiveMode::NonRecursive)?;
-            watched.push(format!("{}", stats_path.display()));
+        let mut watched_db_parents: HashSet<PathBuf> = HashSet::new();
+        for stats_path in &self.statistics_db_paths {
+            if stats_path.exists()
+                && let Some(parent) = stats_path.parent()
+            {
+                if watched_db_parents.insert(parent.to_path_buf()) {
+                    watcher.watch(parent, RecursiveMode::NonRecursive)?;
+                }
+                watched.push(format!("{}", stats_path.display()));
+            }
         }
 
         if let Some(ref kobo_db_path) = self.kobo_db_path
             && kobo_db_path.exists()
             && let Some(parent) = kobo_db_path.parent()
         {
-            watcher.watch(parent, RecursiveMode::NonRecursive)?;
+            if watched_db_parents.insert(parent.to_path_buf()) {
+                watcher.watch(parent, RecursiveMode::NonRecursive)?;
+            }
             watched.push(format!("{}", kobo_db_path.display()));
         }
 
@@ -155,7 +161,7 @@ impl FileWatcher {
 
                     log_accumulated_paths(
                         &accumulated_paths,
-                        config_clone.statistics_db_path.as_deref(),
+                        &config_clone.statistics_db_paths,
                         config_clone.kobo_db_path.as_deref(),
                     );
 
@@ -229,9 +235,7 @@ impl FileWatcher {
             if LibraryItemFormat::from_path(path).is_some() {
                 return true;
             }
-            if let Some(filename) = filename
-                && LibraryItemFormat::is_metadata_file(filename)
-            {
+            if LibraryItemFormat::is_metadata_path(path) {
                 return true;
             }
             if let Some(filename) = filename
@@ -239,8 +243,10 @@ impl FileWatcher {
             {
                 return true;
             }
-            if let Some(ref stats_path) = self.statistics_db_path
-                && is_sqlite_db_or_companion(path, stats_path)
+            if self
+                .statistics_db_paths
+                .iter()
+                .any(|stats_path| is_sqlite_db_or_companion(path, stats_path))
             {
                 return true;
             }
@@ -323,7 +329,7 @@ fn collapse_paths(paths: &[String]) -> String {
 /// Log accumulated unique paths once before a rebuild.
 fn log_accumulated_paths(
     paths: &HashSet<PathBuf>,
-    statistics_db_path: Option<&std::path::Path>,
+    statistics_db_paths: &[PathBuf],
     kobo_db_path: Option<&std::path::Path>,
 ) {
     for path in paths {
@@ -331,16 +337,15 @@ fn log_accumulated_paths(
 
         if let Some(format) = LibraryItemFormat::from_path(path) {
             info!("{:?} file changed: {:?}", format, path);
-        } else if let Some(filename) = filename
-            && LibraryItemFormat::is_metadata_file(filename)
-        {
+        } else if LibraryItemFormat::is_metadata_path(path) {
             info!("Metadata file changed: {:?}", path);
         } else if let Some(filename) = filename
             && filename.ends_with(".sdr")
         {
             info!("KoReader metadata directory changed: {:?}", path);
-        } else if let Some(stats_path) = statistics_db_path
-            && is_sqlite_db_or_companion(path, stats_path)
+        } else if statistics_db_paths
+            .iter()
+            .any(|stats_path| is_sqlite_db_or_companion(path, stats_path))
         {
             info!("Statistics database changed: {:?}", path);
         } else if let Some(kobo_db_path) = kobo_db_path

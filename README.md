@@ -57,7 +57,7 @@
 
 **Docker Compose** — Community-maintained image via [koshelf-docker](https://github.com/DevTigro/koshelf-docker). See the [Installation Guide](docs/installation.md) for a sample `docker-compose.yml`.
 
-**Prebuilt binaries** — Download from the [releases page](https://github.com/paviro/koshelf/releases) (Windows x64, macOS, Linux x64/ARM64).
+**Prebuilt binaries** — Download from the [releases page](https://github.com/paviro/koshelf/releases) (Linux GNU/musl, Windows MSVC, and macOS for x86_64 and ARM64).
 
 For detailed installation instructions (building from source, first-time CLI guide, Windows Defender notes), see the [Installation Guide](docs/installation.md).
 
@@ -82,13 +82,26 @@ For all subcommands, options, environment variables, and examples, see the [Conf
 |-------|-------------|
 | [Installation](docs/installation.md) | Home Assistant, Docker, prebuilt binaries, building from source |
 | [Configuration](docs/configuration.md) | Subcommands, CLI options, environment variables, config file, examples |
-| [KoReader Setup](docs/koreader-setup.md) | Metadata storage options (sdr/hashdocsettings/docsettings), deployment setup |
+| [KoReader Setup](docs/koreader-setup.md) | Metadata storage options (sdr/hashdocsettings/docsettings), deployment setup, reading statistics from multiple devices |
 | [Authentication](docs/authentication.md) | Password authentication for serve mode |
 | [Supported Data](docs/supported-data.md) | Supported formats and extracted metadata fields |
 | [Stable Page Metadata](docs/stable-page-metadata.md) | KOReader stable page metadata & synthetic page scaling |
 | [Static Export](docs/static-export.md) | Generated site directory structure |
 | [API Reference](docs/API.md) | REST API endpoints, parameters, and response schemas |
+| [Releasing](docs/RELEASING.md) | Release tags, artifacts, signing, notarization, checksums, and attestations |
 | [Syncthing Setups](docs/syncthing_setups/README.md) | Community-contributed device sync guides |
+
+## Development
+
+Enable the repository's Git hooks after cloning:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Commit messages must use the `type(scope): description` format, for example
+`feat(reader): add keyboard navigation`. Add `!` after the scope for a breaking
+change, for example `feat(api)!: remove deprecated endpoint`.
 
 ## Credits
 

@@ -23,10 +23,9 @@ fn resolve_collections_path(config: &SiteConfig) -> Option<PathBuf> {
     }
 
     config
-        .statistics_db_path
-        .as_ref()
-        .and_then(|stats| stats.parent())
-        .map(|dir| dir.join("collection.lua"))
+        .statistics_db_paths
+        .iter()
+        .find_map(|stats| stats.parent().map(|dir| dir.join("collection.lua")))
         .filter(|path| path.exists())
 }
 

@@ -43,11 +43,22 @@ Docker Image Repository: [koshelf-docker](https://github.com/DevTigro/koshelf-do
 
 ## Prebuilt Binaries
 
-Download a prebuilt binary from the [releases page](https://github.com/paviro/koshelf/releases). Binaries are available for:
+Download a prebuilt binary from the [releases page](https://github.com/paviro/koshelf/releases).
 
-- Windows (x64)
-- macOS (Apple Silicon, Intel & Universal)
-- Linux (x64 and ARM64)
+| Platform | Architectures | Minimum system |
+| --- | --- | --- |
+| Linux glibc | x86_64, i686, ARMv7 | Linux 3.2 and glibc 2.17 |
+| Linux glibc | ARM64 | Linux 4.1 and glibc 2.17 |
+| Linux glibc | riscv64 | Linux 4.15 and glibc 2.27 |
+| Linux musl | x86_64, ARM64, i686, ARMv7, riscv64 | Static; no host glibc requirement |
+| FreeBSD | x86_64, ARM64 | FreeBSD 14 |
+| Windows MSVC | x86_64, ARM64 | Windows 10 or Windows Server 2016 |
+| macOS | Intel | macOS 10.12 |
+| macOS | Apple Silicon | macOS 11 |
+
+The static Linux builds do not have an exact minimum kernel guarantee; use the
+glibc builds when the documented kernel floor matters. Compatibility with an
+old OS does not mean that OS still receives security updates.
 
 KoShelf is a command line tool — you need to run it from a terminal (macOS/Linux) or PowerShell/Command Prompt (Windows). Double-clicking the executable won't work since it requires command line arguments.
 
@@ -102,8 +113,9 @@ koshelf export ~/my-library-site --library-path ~/Books
 
 ### Prerequisites
 
-- Rust 1.70+ (for building)
+- Rust 1.96+ (for building)
 - Node.js and npm (React frontend build pipeline)
+- `cargo-about` for complete release-mode dependency licensing
 
 ### Building the tool
 
@@ -117,4 +129,7 @@ cargo build --release
 
 The binary will be available at `target/release/koshelf`.
 
-**Note:** The React frontend is built during `cargo build` and embedded into the binary.
+**Note:** The React frontend and third-party license report are built during
+`cargo build` and embedded into the binary. CI and release workflows build the
+frontend once and share it between platform runners; normal local builds use
+`frontend/node_modules` directly.

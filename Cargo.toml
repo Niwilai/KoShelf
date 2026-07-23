@@ -1,6 +1,6 @@
 [package]
 name = "koshelf"
-version = "2026.6.1"
+version = "2026.7.1"
 description = "KoShelf — a reading companion powered by KOReader metadata."
 repository = "https://github.com/paviro/KOShelf"
 license = "EUPL-1.2"
@@ -38,8 +38,6 @@ image = { version = "0.25.10", default-features = false, features = [
     "gif",
 ] }
 webp = "0.3.1"
-# Lua parsing (use LuaJIT to match KoReader's runtime)
-mlua = { version = "0.11.6", features = ["luajit", "vendored", "send"] }
 # Serialization
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.150"
@@ -52,13 +50,13 @@ env_logger = "0.11.10"
 # Progress bars
 indicatif = "0.18.4"
 # XML parsing
-quick-xml = "0.40.1"
+quick-xml = "0.41.0"
 # HTML sanitization
-ammonia = "4.1.2"
+ammonia = "4.1.4"
 # Web server (for live server mode)
 axum = "0.8.9"
 tower = "0.5.3"
-tower-http = { version = "0.6.11", features = [
+tower-http = { version = "0.7.0", features = [
     "fs",
     "set-header",
     "compression-gzip",
@@ -90,6 +88,15 @@ mimalloc = "0.1.52"
 [target.'cfg(not(windows))'.dependencies]
 # CBR/RAR archive extraction (not supported on Windows)
 unrar = "0.5.8"
+
+# Lua parsing (use LuaJIT to match KoReader's runtime). Mainline LuaJIT has no
+# riscv64 backend, so that arch uses vendored PUC Lua 5.1 instead — KOReader
+# sidecars are plain Lua 5.1 data chunks, so the semantics are identical.
+[target.'cfg(not(target_arch = "riscv64"))'.dependencies]
+mlua = { version = "0.12.0", features = ["luajit", "vendored", "send"] }
+
+[target.'cfg(target_arch = "riscv64")'.dependencies]
+mlua = { version = "0.12.0", features = ["lua51", "vendored", "send"] }
 
 [build-dependencies]
 serde = { version = "1.0.228", features = ["derive"] }

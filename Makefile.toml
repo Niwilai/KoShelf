@@ -7,6 +7,34 @@ main_project_member = "."
 # Default environment variables
 [env]
 CARGO_BUILD_PROFILE = "release"
+CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER = "aarch64-unknown-linux-musl-gcc"
+CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER = "aarch64-linux-gnu-gcc"
+CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER = "x86_64-linux-gnu-gcc"
+CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER = "x86_64-unknown-linux-musl-gcc"
+CARGO_TARGET_I686_UNKNOWN_LINUX_GNU_LINKER = "i686-unknown-linux-gnu-gcc"
+CARGO_TARGET_I686_UNKNOWN_LINUX_MUSL_LINKER = "i686-unknown-linux-musl-gcc"
+CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER = "armv7-unknown-linux-gnueabihf-gcc"
+CARGO_TARGET_ARMV7_UNKNOWN_LINUX_MUSLEABIHF_LINKER = "armv7-unknown-linux-musleabihf-gcc"
+CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER = "x86_64-w64-mingw32-gcc"
+CC_aarch64_unknown_linux_musl = "aarch64-unknown-linux-musl-gcc"
+CXX_aarch64_unknown_linux_musl = "aarch64-unknown-linux-musl-g++"
+CC_aarch64_unknown_linux_gnu = "aarch64-linux-gnu-gcc"
+CXX_aarch64_unknown_linux_gnu = "aarch64-linux-gnu-g++"
+CC_x86_64_unknown_linux_gnu = "x86_64-linux-gnu-gcc"
+CXX_x86_64_unknown_linux_gnu = "x86_64-linux-gnu-g++"
+CC_x86_64_unknown_linux_musl = "x86_64-unknown-linux-musl-gcc"
+CXX_x86_64_unknown_linux_musl = "x86_64-unknown-linux-musl-g++"
+CC_i686_unknown_linux_gnu = "i686-unknown-linux-gnu-gcc"
+CXX_i686_unknown_linux_gnu = "i686-unknown-linux-gnu-g++"
+CC_i686_unknown_linux_musl = "i686-unknown-linux-musl-gcc"
+CXX_i686_unknown_linux_musl = "i686-unknown-linux-musl-g++"
+CC_armv7_unknown_linux_gnueabihf = "armv7-unknown-linux-gnueabihf-gcc"
+CXX_armv7_unknown_linux_gnueabihf = "armv7-unknown-linux-gnueabihf-g++"
+CC_armv7_unknown_linux_musleabihf = "armv7-unknown-linux-musleabihf-gcc"
+CXX_armv7_unknown_linux_musleabihf = "armv7-unknown-linux-musleabihf-g++"
+# The aarch64 FreeBSD slice is Tier 3 (no rustup std); this nightly must match
+# the pin in .github/workflows/release.yml.
+FREEBSD_NIGHTLY = "nightly-2026-07-15"
 
 # Production profile environment
 [env.production]
@@ -16,40 +44,130 @@ CARGO_BUILD_PROFILE = "release"
 [tasks.build-arm64-musl]
 description = "Build for ARM64 with musl"
 command = "cargo"
-args = ["build", "--release", "--target", "aarch64-unknown-linux-musl"]
+args = ["build", "--release", "--locked", "--target", "aarch64-unknown-linux-musl"]
 
 [tasks.build-arm64-gnu]
 description = "Build for ARM64 with glibc"
 command = "cargo"
-args = ["build", "--release", "--target", "aarch64-unknown-linux-gnu"]
+args = ["build", "--release", "--locked", "--target", "aarch64-unknown-linux-gnu"]
 
 # x86_64 Linux targets
 [tasks.build-x86-gnu]
 description = "Build for x86_64 Linux with glibc"
 command = "cargo"
-args = ["build", "--release", "--target", "x86_64-unknown-linux-gnu"]
+args = ["build", "--release", "--locked", "--target", "x86_64-unknown-linux-gnu"]
 
 [tasks.build-x86-musl]
 description = "Build for x86_64 Linux with musl"
 command = "cargo"
-args = ["build", "--release", "--target", "x86_64-unknown-linux-musl"]
+args = ["build", "--release", "--locked", "--target", "x86_64-unknown-linux-musl"]
+
+# 32-bit x86 Linux targets
+[tasks.build-i686-gnu]
+description = "Build for 32-bit x86 Linux with glibc"
+command = "cargo"
+args = ["build", "--release", "--locked", "--target", "i686-unknown-linux-gnu"]
+
+[tasks.build-i686-musl]
+description = "Build for 32-bit x86 Linux with musl"
+command = "cargo"
+args = ["build", "--release", "--locked", "--target", "i686-unknown-linux-musl"]
+
+# 32-bit ARMv7 Linux targets (hard-float)
+[tasks.build-armv7-gnu]
+description = "Build for 32-bit ARMv7 Linux with glibc (hard-float)"
+command = "cargo"
+args = ["build", "--release", "--locked", "--target", "armv7-unknown-linux-gnueabihf"]
+
+[tasks.build-armv7-musl]
+description = "Build for 32-bit ARMv7 Linux with musl (hard-float)"
+command = "cargo"
+args = ["build", "--release", "--locked", "--target", "armv7-unknown-linux-musleabihf"]
+
+# 64-bit RISC-V Linux targets. No riscv64 cross gcc ships via Homebrew, so
+# these cross-compile with cargo-zigbuild (zig supplies libc and the linker).
+# Mainline LuaJIT has no riscv64 backend; mlua builds vendored PUC Lua 5.1 on
+# this arch instead (see Cargo.toml).
+[tasks.build-riscv64-gnu]
+description = "Cross-compile for riscv64 Linux with glibc 2.27+ (cargo-zigbuild)"
+command = "cargo"
+args = [
+    "zigbuild",
+    "--release",
+    "--locked",
+    "--target",
+    "riscv64gc-unknown-linux-gnu.2.27",
+]
+
+[tasks.build-riscv64-musl]
+description = "Cross-compile for riscv64 Linux with musl (cargo-zigbuild)"
+command = "cargo"
+args = [
+    "zigbuild",
+    "--release",
+    "--locked",
+    "--target",
+    "riscv64gc-unknown-linux-musl",
+]
+# riscv64 musl is a newer target that defaults to dynamic linking, unlike the
+# older musl targets; force the static binary the musl artifacts promise.
+env = { CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_MUSL_RUSTFLAGS = "-C target-feature=+crt-static" }
+
+# FreeBSD targets, cross-compiled with cargo-zigbuild: zig ships the
+# FreeBSD 14+ libc stubs and headers, so no BSD host is needed. TARGET_LIBS
+# and TARGET_STRIP configure the vendored LuaJIT build as in release.yml;
+# the CXXFLAGS define selects unrar's scalar fallback because zig omits the
+# __cpu_model runtime its optional x86 dispatch uses.
+#
+# TARGET_SYS steers only LuaJIT's host-side buildvm: without it the Makefile
+# assumes the macOS host and demands MACOSX_DEPLOYMENT_TARGET. "Linux" gives
+# buildvm the POSIX ELF defines — the same thing the Linux CI runners produce
+# by default — while the FreeBSD target code detects its OS from __FreeBSD__
+# in zig's headers. ("FreeBSD" is not a value LuaJIT's Makefile knows; it
+# would map to the non-POSIX LUAJIT_OS_OTHER and drop POSIX library defs.)
+[tasks.build-freebsd-x86]
+description = "Cross-compile for x86_64 FreeBSD 14+ (cargo-zigbuild)"
+command = "cargo"
+args = ["zigbuild", "--release", "--locked", "--target", "x86_64-unknown-freebsd"]
+env = { CXXFLAGS = "-D__builtin_cpu_supports(x)=0", TARGET_LIBS = "-lunwind", TARGET_STRIP = "true", TARGET_SYS = "Linux" }
+
+# Cargo-make would try to install the target for a `+toolchain` argument, so
+# the nightly is selected via RUSTUP_TOOLCHAIN instead. Install it first:
+#   rustup toolchain install nightly-2026-07-15 --component rust-src
+[tasks.build-freebsd-arm64]
+description = "Cross-compile for aarch64 FreeBSD 14+ (Tier 3, nightly + build-std)"
+command = "cargo"
+args = [
+    "zigbuild",
+    "--release",
+    "--locked",
+    "--target",
+    "aarch64-unknown-freebsd",
+    "-Z",
+    "build-std=std,panic_abort",
+]
+env = { RUSTUP_TOOLCHAIN = "${FREEBSD_NIGHTLY}", TARGET_LIBS = "-lunwind", TARGET_STRIP = "true", TARGET_SYS = "Linux" }
 
 # Windows targets
 [tasks.build-windows-gnu]
 description = "Build for Windows x86_64 (MinGW)"
 command = "cargo"
-args = ["build", "--release", "--target", "x86_64-pc-windows-gnu"]
+args = ["build", "--release", "--locked", "--target", "x86_64-pc-windows-gnu"]
 
 # macOS targets
 [tasks.build-macos-intel]
-description = "Build for Intel macOS"
+description = "Build for Intel macOS 10.12 and newer"
 command = "cargo"
-args = ["build", "--release", "--target", "x86_64-apple-darwin"]
+args = ["build", "--release", "--locked", "--target", "x86_64-apple-darwin"]
+env = { MACOSX_DEPLOYMENT_TARGET = "10.12" }
+env_files = ["./.env"]
 
 [tasks.build-macos-silicon]
-description = "Build for Apple Silicon macOS"
+description = "Build for Apple Silicon macOS 11 and newer"
 command = "cargo"
-args = ["build", "--release", "--target", "aarch64-apple-darwin"]
+args = ["build", "--release", "--locked", "--target", "aarch64-apple-darwin"]
+env = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
+env_files = ["./.env"]
 
 [tasks.build-macos-universal]
 description = "Build universal macOS binary (Intel + Apple Silicon)"
@@ -70,6 +188,14 @@ dependencies = [
     "build-arm64-gnu",
     "build-x86-gnu",
     "build-x86-musl",
+    "build-i686-gnu",
+    "build-i686-musl",
+    "build-armv7-gnu",
+    "build-armv7-musl",
+    "build-riscv64-gnu",
+    "build-riscv64-musl",
+    "build-freebsd-x86",
+    "build-freebsd-arm64",
     "build-windows-gnu",
     "build-macos-intel",
     "build-macos-silicon",
@@ -89,7 +215,13 @@ dependencies = [
     "build-arm64-musl",
     "build-arm64-gnu",
     "build-x86-gnu",
-    "build-x86-musl"
+    "build-x86-musl",
+    "build-i686-gnu",
+    "build-i686-musl",
+    "build-armv7-gnu",
+    "build-armv7-musl",
+    "build-riscv64-gnu",
+    "build-riscv64-musl"
 ]
 
 [tasks.build-windows-all]
@@ -109,7 +241,7 @@ dependencies = [
 [tasks.run-tests]
 description = "Execute the full test suite before building releases"
 command = "cargo"
-args = ["test"]
+args = ["test", "--locked"]
 
 [tasks.clean-all]
 description = "Clean all build artifacts"
@@ -176,6 +308,110 @@ zip "${PLATFORM}.zip" "${BINARY_NAME}"
 rm "${BINARY_NAME}"
 '''
 
+[tasks.package-i686-gnu]
+description = "Package 32-bit x86 gnu binary"
+dependencies = ["create-release-dir"]
+script = '''
+BINARY_NAME="koshelf"
+TARGET="i686-unknown-linux-gnu"
+PLATFORM="linux-gnu-i686"
+cp "target/${TARGET}/release/${BINARY_NAME}" "release/"
+cd release
+zip "${PLATFORM}.zip" "${BINARY_NAME}"
+rm "${BINARY_NAME}"
+'''
+
+[tasks.package-i686-musl]
+description = "Package 32-bit x86 musl binary"
+dependencies = ["create-release-dir"]
+script = '''
+BINARY_NAME="koshelf"
+TARGET="i686-unknown-linux-musl"
+PLATFORM="linux-musl-i686"
+cp "target/${TARGET}/release/${BINARY_NAME}" "release/"
+cd release
+zip "${PLATFORM}.zip" "${BINARY_NAME}"
+rm "${BINARY_NAME}"
+'''
+
+[tasks.package-armv7-gnu]
+description = "Package 32-bit ARMv7 gnu binary"
+dependencies = ["create-release-dir"]
+script = '''
+BINARY_NAME="koshelf"
+TARGET="armv7-unknown-linux-gnueabihf"
+PLATFORM="linux-gnu-armv7"
+cp "target/${TARGET}/release/${BINARY_NAME}" "release/"
+cd release
+zip "${PLATFORM}.zip" "${BINARY_NAME}"
+rm "${BINARY_NAME}"
+'''
+
+[tasks.package-armv7-musl]
+description = "Package 32-bit ARMv7 musl binary"
+dependencies = ["create-release-dir"]
+script = '''
+BINARY_NAME="koshelf"
+TARGET="armv7-unknown-linux-musleabihf"
+PLATFORM="linux-musl-armv7"
+cp "target/${TARGET}/release/${BINARY_NAME}" "release/"
+cd release
+zip "${PLATFORM}.zip" "${BINARY_NAME}"
+rm "${BINARY_NAME}"
+'''
+
+[tasks.package-riscv64-gnu]
+description = "Package riscv64 gnu binary"
+dependencies = ["create-release-dir"]
+script = '''
+BINARY_NAME="koshelf"
+TARGET="riscv64gc-unknown-linux-gnu"
+PLATFORM="linux-gnu-riscv64"
+cp "target/${TARGET}/release/${BINARY_NAME}" "release/"
+cd release
+zip "${PLATFORM}.zip" "${BINARY_NAME}"
+rm "${BINARY_NAME}"
+'''
+
+[tasks.package-riscv64-musl]
+description = "Package riscv64 musl binary"
+dependencies = ["create-release-dir"]
+script = '''
+BINARY_NAME="koshelf"
+TARGET="riscv64gc-unknown-linux-musl"
+PLATFORM="linux-musl-riscv64"
+cp "target/${TARGET}/release/${BINARY_NAME}" "release/"
+cd release
+zip "${PLATFORM}.zip" "${BINARY_NAME}"
+rm "${BINARY_NAME}"
+'''
+
+[tasks.package-freebsd-x86]
+description = "Package x86_64 FreeBSD binary"
+dependencies = ["create-release-dir"]
+script = '''
+BINARY_NAME="koshelf"
+TARGET="x86_64-unknown-freebsd"
+PLATFORM="freebsd-x86_64"
+cp "target/${TARGET}/release/${BINARY_NAME}" "release/"
+cd release
+zip "${PLATFORM}.zip" "${BINARY_NAME}"
+rm "${BINARY_NAME}"
+'''
+
+[tasks.package-freebsd-arm64]
+description = "Package aarch64 FreeBSD binary"
+dependencies = ["create-release-dir"]
+script = '''
+BINARY_NAME="koshelf"
+TARGET="aarch64-unknown-freebsd"
+PLATFORM="freebsd-aarch64"
+cp "target/${TARGET}/release/${BINARY_NAME}" "release/"
+cd release
+zip "${PLATFORM}.zip" "${BINARY_NAME}"
+rm "${BINARY_NAME}"
+'''
+
 [tasks.package-windows-gnu]
 description = "Package Windows gnu binary"
 dependencies = ["create-release-dir"]
@@ -236,23 +472,63 @@ dependencies = [
     "package-arm64-gnu",
     "package-x86-gnu", 
     "package-x86-musl",
+    "package-i686-gnu",
+    "package-i686-musl",
+    "package-armv7-gnu",
+    "package-armv7-musl",
+    "package-riscv64-gnu",
+    "package-riscv64-musl",
+    "package-freebsd-x86",
+    "package-freebsd-arm64",
     "package-windows-gnu",
     "package-macos-intel",
     "package-macos-silicon",
     "package-macos-universal"
 ]
 
-# Build and package in one go
+# Build, package, sign, and notarize everything available from a Mac.
 [tasks.release-all]
-description = "Build and package all platforms"
+description = "Build, package, sign and notarize all local release artifacts"
 dependencies = [
+    "check-apple-credentials",
     "run-tests",
     "build-all",
     "package-all",
     "notarize-macos-intel",
     "notarize-macos-silicon",
     "notarize-macos-universal"
-] 
+]
+
+[tasks.release]
+description = "Build, package, sign and notarize all local release artifacts"
+dependencies = ["release-all"]
+
+[tasks.check-apple-credentials]
+description = "Fail early unless the signing identity and notarization keychain profile are set up"
+script = '''
+if [ -f ./.env ]; then
+    set -a
+    . ./.env
+    set +a
+fi
+if [ -z "$APPLE_DEVELOPER_ID" ]; then
+    echo "release needs APPLE_DEVELOPER_ID for signing; set it in ./.env," >&2
+    echo "or use \`cargo build --release\` for an unsigned local build." >&2
+    exit 1
+fi
+if [ -z "$APPLE_NOTARY_PROFILE" ]; then
+    echo "release needs APPLE_NOTARY_PROFILE — the name of a notarytool keychain profile; set it in ./.env." >&2
+    echo "Create one with:" >&2
+    echo "  xcrun notarytool store-credentials <name> --apple-id <apple-id> --team-id <team-id>" >&2
+    exit 1
+fi
+if ! xcrun notarytool history --keychain-profile "$APPLE_NOTARY_PROFILE" >/dev/null 2>&1; then
+    echo "the \"$APPLE_NOTARY_PROFILE\" keychain profile does not work; create it with" >&2
+    echo "  xcrun notarytool store-credentials \"$APPLE_NOTARY_PROFILE\" --apple-id <apple-id> --team-id <team-id>" >&2
+    exit 1
+fi
+echo "Signing identity and notarization profile present."
+'''
 
 [tasks.sign-macos-intel]
 description = "Sign Intel macOS binary if APPLE_DEVELOPER_ID is set"
@@ -261,15 +537,11 @@ env_files = ["./.env"]
 condition = { files_exist = ["./.env"] }
 script = '''
 BINARY_PATH="target/x86_64-apple-darwin/release/koshelf"
-if [ -n "$APPLE_DEVELOPER_ID" ]; then
-    if codesign --sign "$APPLE_DEVELOPER_ID" --timestamp --options runtime "$BINARY_PATH"; then
-        echo "✅ Successfully signed Intel macOS binary."
-    else
-        echo "❌ Failed to sign Intel macOS binary."
-    fi
-else
-    echo "APPLE_DEVELOPER_ID not set, skipping code signing for Intel macOS binary."
+if [ -z "$APPLE_DEVELOPER_ID" ]; then
+    echo "APPLE_DEVELOPER_ID not set, cannot sign Intel macOS binary." >&2
+    exit 1
 fi
+codesign --sign "$APPLE_DEVELOPER_ID" --timestamp --options runtime "$BINARY_PATH"
 '''
 
 [tasks.sign-macos-silicon]
@@ -279,15 +551,11 @@ env_files = ["./.env"]
 condition = { files_exist = ["./.env"] }
 script = '''
 BINARY_PATH="target/aarch64-apple-darwin/release/koshelf"
-if [ -n "$APPLE_DEVELOPER_ID" ]; then
-    if codesign --sign "$APPLE_DEVELOPER_ID" --timestamp --options runtime "$BINARY_PATH"; then
-        echo "✅ Successfully signed Apple Silicon macOS binary."
-    else
-        echo "❌ Failed to sign Apple Silicon macOS binary."
-    fi
-else
-    echo "APPLE_DEVELOPER_ID not set, skipping code signing for Apple Silicon macOS binary."
+if [ -z "$APPLE_DEVELOPER_ID" ]; then
+    echo "APPLE_DEVELOPER_ID not set, cannot sign Apple Silicon macOS binary." >&2
+    exit 1
 fi
+codesign --sign "$APPLE_DEVELOPER_ID" --timestamp --options runtime "$BINARY_PATH"
 '''
 
 [tasks.sign-macos-universal]
@@ -297,70 +565,36 @@ env_files = ["./.env"]
 condition = { files_exist = ["./.env"] }
 script = '''
 BINARY_PATH="target/universal-apple-darwin/release/koshelf"
-if [ -n "$APPLE_DEVELOPER_ID" ]; then
-    if codesign --sign "$APPLE_DEVELOPER_ID" --timestamp --options runtime "$BINARY_PATH"; then
-        echo "✅ Successfully signed Universal macOS binary."
-    else
-        echo "❌ Failed to sign Universal macOS binary."
-    fi
-else
-    echo "APPLE_DEVELOPER_ID not set, skipping code signing for Universal macOS binary."
+if [ -z "$APPLE_DEVELOPER_ID" ]; then
+    echo "APPLE_DEVELOPER_ID not set, cannot sign Universal macOS binary." >&2
+    exit 1
 fi
-''' 
+codesign --sign "$APPLE_DEVELOPER_ID" --timestamp --options runtime "$BINARY_PATH"
+'''
 
 [tasks.notarize-macos-intel]
-description = "Notarize Intel macOS zip if APPLE_USERNAME and APPLE_PASSWORD are set"
+description = "Notarize Intel macOS zip via the notarytool keychain profile"
 dependencies = ["package-macos-intel"]
 env_files = ["./.env"]
 condition = { files_exist = ["./.env"] }
 script = '''
-ZIP_PATH="release/apple-darwin-x86_64.zip"
-TEAM_ID=$(echo "$APPLE_DEVELOPER_ID" | sed -n 's/.*(\(.*\)).*/\1/p')
-if [ -n "$APPLE_USERNAME" ] && [ -n "$APPLE_PASSWORD" ] && [ -n "$TEAM_ID" ]; then
-    if xcrun notarytool submit "$ZIP_PATH" --apple-id "$APPLE_USERNAME" --password "$APPLE_PASSWORD" --team-id "$TEAM_ID" --wait; then
-        echo "✅ Successfully notarized Intel macOS zip."
-    else
-        echo "❌ Failed to notarize Intel macOS zip."
-    fi
-else
-    echo "APPLE_USERNAME, APPLE_PASSWORD, or APPLE_DEVELOPER_ID not set, skipping notarization for Intel macOS zip."
-fi
+xcrun notarytool submit "release/apple-darwin-x86_64.zip" --keychain-profile "$APPLE_NOTARY_PROFILE" --wait
 '''
 
 [tasks.notarize-macos-silicon]
-description = "Notarize Apple Silicon macOS zip if APPLE_USERNAME and APPLE_PASSWORD are set"
+description = "Notarize Apple Silicon macOS zip via the notarytool keychain profile"
 dependencies = ["package-macos-silicon"]
 env_files = ["./.env"]
 condition = { files_exist = ["./.env"] }
 script = '''
-ZIP_PATH="release/apple-darwin-aarch64.zip"
-TEAM_ID=$(echo "$APPLE_DEVELOPER_ID" | sed -n 's/.*(\(.*\)).*/\1/p')
-if [ -n "$APPLE_USERNAME" ] && [ -n "$APPLE_PASSWORD" ] && [ -n "$TEAM_ID" ]; then
-    if xcrun notarytool submit "$ZIP_PATH" --apple-id "$APPLE_USERNAME" --password "$APPLE_PASSWORD" --team-id "$TEAM_ID" --wait; then
-        echo "✅ Successfully notarized Apple Silicon macOS zip."
-    else
-        echo "❌ Failed to notarize Apple Silicon macOS zip."
-    fi
-else
-    echo "APPLE_USERNAME, APPLE_PASSWORD, or APPLE_DEVELOPER_ID not set, skipping notarization for Apple Silicon macOS zip."
-fi
+xcrun notarytool submit "release/apple-darwin-aarch64.zip" --keychain-profile "$APPLE_NOTARY_PROFILE" --wait
 '''
 
 [tasks.notarize-macos-universal]
-description = "Notarize Universal macOS zip if APPLE_USERNAME and APPLE_PASSWORD are set"
+description = "Notarize Universal macOS zip via the notarytool keychain profile"
 dependencies = ["package-macos-universal"]
 env_files = ["./.env"]
 condition = { files_exist = ["./.env"] }
 script = '''
-ZIP_PATH="release/apple-darwin-universal.zip"
-TEAM_ID=$(echo "$APPLE_DEVELOPER_ID" | sed -n 's/.*(\(.*\)).*/\1/p')
-if [ -n "$APPLE_USERNAME" ] && [ -n "$APPLE_PASSWORD" ] && [ -n "$TEAM_ID" ]; then
-    if xcrun notarytool submit "$ZIP_PATH" --apple-id "$APPLE_USERNAME" --password "$APPLE_PASSWORD" --team-id "$TEAM_ID" --wait; then
-        echo "✅ Successfully notarized Universal macOS zip."
-    else
-        echo "❌ Failed to notarize Universal macOS zip."
-    fi
-else
-    echo "APPLE_USERNAME, APPLE_PASSWORD, or APPLE_DEVELOPER_ID not set, skipping notarization for Universal macOS zip."
-fi
-''' 
+xcrun notarytool submit "release/apple-darwin-universal.zip" --keychain-profile "$APPLE_NOTARY_PROFILE" --wait
+'''

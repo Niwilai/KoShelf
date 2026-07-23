@@ -7,7 +7,8 @@
 
 use anyhow::{Context, Result, anyhow};
 use log::warn;
-use mlua::{ChunkMode, Lua, LuaOptions, StdLib, Table, Value};
+use mlua::chunk::ChunkMode;
+use mlua::{Lua, LuaOptions, StdLib, Table, Value};
 use std::collections::HashSet;
 use std::fmt::Write as FmtWrite;
 use std::fs::{self, File};
@@ -18,6 +19,16 @@ use std::time::SystemTime;
 const MAX_DEPTH: usize = 64;
 const INDENT: &str = "    ";
 const BACKUP_MIN_AGE_SECS: u64 = 60;
+
+#[cfg(target_pointer_width = "32")]
+fn lua_integer_key(value: mlua::Integer) -> i64 {
+    i64::from(value)
+}
+
+#[cfg(target_pointer_width = "64")]
+fn lua_integer_key(value: mlua::Integer) -> i64 {
+    value
+}
 
 /// Round-trip writer for KoReader metadata sidecar files.
 ///
@@ -195,8 +206,13 @@ fn write_table(
         }
 
         match key {
-            Value::Integer(i) => int_entries.push((i, val)),
-            Value::Number(n) if n == (n as i64) as f64 => {
+            Value::Integer(i) => int_entries.push((lua_integer_key(i), val)),
+            // The upper bound is exclusive: 2^63 (-(i64::MIN as f64)) is
+            // exactly representable as f64 but not as i64, and the saturating
+            // `as i64` cast would silently turn it into i64::MAX.
+            Value::Number(n)
+                if n.trunc() == n && n >= i64::MIN as f64 && n < -(i64::MIN as f64) =>
+            {
                 int_entries.push((n as i64, val));
             }
             Value::String(s) => {
@@ -444,6 +460,35 @@ mod tests {
         assert!(first_pos < second_pos);
         // String keys sorted ascending
         assert!(alpha_pos < zebra_pos);
+    }
+
+    #[test]
+    fn skips_numeric_keys_outside_i64_range() {
+        let tmp = TempDir::new().unwrap();
+        let path = write_fixture(
+            tmp.path(),
+            r#"return {
+    [-9223372036854775808] = "min",
+    [9223372036854774784] = "below",
+    [9223372036854775808] = "overflow",
+    [1.5] = "fractional",
+}"#,
+        );
+
+        let writer = LuaWriter::new();
+        writer
+            .write(&path, |_, _| Ok(()))
+            .expect("write should succeed");
+
+        let content = fs::read_to_string(&path).unwrap();
+        // i64::MIN and the largest f64 below 2^63 are exact i64 keys.
+        assert!(content.contains("[-9223372036854775808] = \"min\""));
+        assert!(content.contains("[9223372036854774784] = \"below\""));
+        // 2^63 fits in an f64 but not an i64; it must be dropped, not
+        // saturated to [9223372036854775807].
+        assert!(!content.contains("9223372036854775807"));
+        assert!(!content.contains("\"overflow\""));
+        assert!(!content.contains("\"fractional\""));
     }
 
     #[test]
